@@ -13,15 +13,15 @@ A 2D top-down grid-based puzzle game inspired by "Night at the Museum". Players 
 ### Exhibit Behavior
 - At game start, all exhibits are in their correct positions
 - Each exhibit has a fixed movement pattern (e.g., move right 3 tiles, then left 3 tiles, repeat)
-- When player pushes/pulls an exhibit, it resumes its original pattern from the new position next turn, continuing from its current step in the pattern (not resetting)
+- When player pushes an exhibit, it resumes its original pattern from the new position next turn, continuing from its current step in the pattern (not resetting)
 - Exhibits's collision - if exhibits will be colliding next round whether both due to behavior pattern or caused by one being pushed by player, they will collide and the game will be lost! This includes any chain reaction collisions caused by player actions.
 - Wall collision - if exhibit's moving pattern is blocked by the border wall of the game or any other built-in wall bricks, it will stop there for as much turns as needed, but still keeps its behavior pattern and continues trying the same step until it can move
 
 ### Player Mechanics
-- Player can move up/down/left/right one tile per turn, or he can choose to stop there
-- Player can push or pull exhibits within 8 surrounding tiles, but only one at a time
-- Player push/pull actions occur simultaneously with exhibit movements each turn
-- Exhibits block player movement - if exhibit is adjacent, player can only move in remaining 3 directions. But if player pushing or pulling an exhibit will make other exhibits hit the player next turn, the player will have priority while other exhibits will stay at the same place for that turn, just like when facing a wall
+- Player can move up/down/left/right one tile per turn with WASD
+- Player can push the one exhibit in the direction he moves
+- Player push actions occur simultaneously with exhibit movements each turn
+- Exhibits block player movement - if exhibit is adjacent, player can only move in remaining directions. But if player pushing an exhibit will make other exhibits hit the player next turn, the player will have priority while other exhibits will stay at the same place for that turn, just like when facing a wall
 - Player acts as museum curator trying to restore order
 
 ### Win Condition
@@ -44,7 +44,7 @@ A 2D top-down grid-based puzzle game inspired by "Night at the Museum". Players 
 - Turn-based movement system (both the player and exhibit move simultaneously each turn, after player choose direction)
 - Grid-based collision detection
 - Exhibit AI with pattern-based movement (maintaining step counters)
-- Player interaction system (push/pull mechanics)
+- Player interaction system (push mechanics)
 - Turn counter and win/lose conditions
 - Collision detection for all possible scenarios including chain reactions
 
