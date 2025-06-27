@@ -163,13 +163,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5405567e3d1e0384b8bdf995e0a7f3de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridWidth: 9
-  gridHeight: 9
-  tileSize: 32
   maxTurns: 20
+  playerStartPosition: {x: 5, y: 4}
+  horizontalExhibitStartPosition: {x: 2, y: 2}
+  circularExhibitStartPosition: {x: 6, y: 6}
   playerPrefab: {fileID: 4422989690621680760, guid: edb5adf2dd86b0e4fab39b9368ec9cee, type: 3}
   horizontalExhibitPrefab: {fileID: 4595639466723028713, guid: 0b9ab3a27ba121e439e154e5d26a5008, type: 3}
   circularExhibitPrefab: {fileID: 6956495222862133517, guid: 06933bcb33aee404a821c6f8aa40127d, type: 3}
+  obstaclePrefab: {fileID: 8541445955990052288, guid: d4e0a2c190dc4e2439a26bca407a77fe, type: 3}
+  candleHolderPrefab: {fileID: 7736745266377260034, guid: 4f69ad1cff829784da62b5a2805481e2, type: 3}
+  obstaclePositions:
+  - {x: 3, y: 3}
+  candleHolderStartPosition: {x: 7, y: 7}
 --- !u!1 &1201989321
 GameObject:
   m_ObjectHideFlags: 0
@@ -360,6 +365,6 @@ MonoBehaviour:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 1201989325}
   - {fileID: 639124039}
   - {fileID: 1552404202}
-  - {fileID: 1201989325}

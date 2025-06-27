@@ -1,19 +1,22 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GridManager : MonoBehaviour
 {
     public static GridManager Instance { get; private set; }
     
     [Header("Grid Settings")]
-    public int gridWidth = 9;
-    public int gridHeight = 9;
-    public float tileSize = 32f;
+    [SerializeField] private int gridWidth = 9;
+    [SerializeField] private int gridHeight = 9;
+    [SerializeField] private float tileSize = 32f;
     
     [Header("Visual Debug")]
-    public bool showGrid = true;
-    public Color gridColor = Color.white;
+    [SerializeField] private bool showGrid = true;
+    [SerializeField] private Color gridColor = Color.white;
     
     private Vector3 gridOrigin;
+    private bool isInitialized = false;
+    private List<ObstacleBase> obstacles = new List<ObstacleBase>();
     
     private void Awake()
     {
@@ -32,6 +35,12 @@ public class GridManager : MonoBehaviour
     private void Start()
     {
         // Calculate grid origin (center the grid)
+        UpdateGridOrigin();
+        isInitialized = true;
+    }
+    
+    private void UpdateGridOrigin()
+    {
         gridOrigin = new Vector3(
             -(gridWidth * tileSize) / 2f + tileSize / 2f,
             -(gridHeight * tileSize) / 2f + tileSize / 2f,
@@ -42,12 +51,20 @@ public class GridManager : MonoBehaviour
     // Convert grid coordinates to world position
     public Vector3 GridToWorldPosition(Vector2Int gridPos)
     {
+        if (!isInitialized)
+        {
+            UpdateGridOrigin();
+        }
         return gridOrigin + new Vector3(gridPos.x * tileSize, gridPos.y * tileSize, 0f);
     }
     
     // Convert world position to grid coordinates
     public Vector2Int WorldToGridPosition(Vector3 worldPos)
     {
+        if (!isInitialized)
+        {
+            UpdateGridOrigin();
+        }
         Vector3 localPos = worldPos - gridOrigin;
         return new Vector2Int(
             Mathf.RoundToInt(localPos.x / tileSize),
@@ -62,10 +79,60 @@ public class GridManager : MonoBehaviour
                gridPos.y >= 0 && gridPos.y < gridHeight;
     }
     
+    // Check if position is blocked by an obstacle
+    public bool IsPositionBlocked(Vector2Int gridPos)
+    {
+        foreach (ObstacleBase obstacle in obstacles)
+        {
+            if (obstacle.GridPosition == gridPos)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    // Check if position is walkable (within bounds and not blocked by obstacle)
+    public bool IsWalkablePosition(Vector2Int gridPos)
+    {
+        return IsValidPosition(gridPos) && !IsPositionBlocked(gridPos);
+    }
+    
+    // Register an obstacle
+    public void RegisterObstacle(ObstacleBase obstacle)
+    {
+        if (!obstacles.Contains(obstacle))
+        {
+            obstacles.Add(obstacle);
+        }
+    }
+    
+    // Unregister an obstacle
+    public void UnregisterObstacle(ObstacleBase obstacle)
+    {
+        obstacles.Remove(obstacle);
+    }
+    
     // Get distance between two grid positions
     public int GetGridDistance(Vector2Int pos1, Vector2Int pos2)
     {
         return Mathf.Abs(pos1.x - pos2.x) + Mathf.Abs(pos1.y - pos2.y);
+    }
+    
+    // Public getters for grid settings
+    public int GridWidth
+    {
+        get { return gridWidth; }
+    }
+    
+    public int GridHeight
+    {
+        get { return gridHeight; }
+    }
+    
+    public float TileSize
+    {
+        get { return tileSize; }
     }
     
     // Visual debug - draw grid in scene view

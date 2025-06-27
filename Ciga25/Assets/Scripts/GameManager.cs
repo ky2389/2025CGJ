@@ -7,15 +7,27 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
     
     [Header("Game Settings")]
-    public int gridWidth = 9;
-    public int gridHeight = 9;
-    public float tileSize = 32f;
-    public int maxTurns = 20;
+    [SerializeField] private int maxTurns = 20;
+    
+    [Header("Player Settings")]
+    [SerializeField] private Vector2Int playerStartPosition = new Vector2Int(5, 4); // Center of 9x9 grid
+    
+    [Header("Exhibit Settings")]
+    [SerializeField] private Vector2Int horizontalExhibitStartPosition = new Vector2Int(2, 2);
+    [SerializeField] private Vector2Int circularExhibitStartPosition = new Vector2Int(6, 6);
     
     [Header("Prefabs")]
-    public GameObject playerPrefab;
-    public GameObject horizontalExhibitPrefab;
-    public GameObject circularExhibitPrefab;
+    [SerializeField] private GameObject playerPrefab;
+    [SerializeField] private GameObject horizontalExhibitPrefab;
+    [SerializeField] private GameObject circularExhibitPrefab;
+    [SerializeField] private GameObject obstaclePrefab;
+    [SerializeField] private GameObject candleHolderPrefab;
+    
+    [Header("Obstacle Settings")]
+    [SerializeField] private Vector2Int[] obstaclePositions = new Vector2Int[0]; // Array of obstacle positions
+    
+    [Header("Candle Holder Settings")]
+    [SerializeField] private Vector2Int candleHolderStartPosition = new Vector2Int(4, 4);
     
     // Game state
     private int currentTurn = 0;
@@ -26,6 +38,7 @@ public class GameManager : MonoBehaviour
     private GridManager gridManager;
     private PlayerController player;
     private List<ExhibitBase> exhibits = new List<ExhibitBase>();
+    private List<CandleHolder> candleHolders = new List<CandleHolder>();
     private Dictionary<Vector2Int, Vector2Int> exhibitStartPositions = new Dictionary<Vector2Int, Vector2Int>();
     
     private void Awake()
@@ -55,6 +68,8 @@ public class GameManager : MonoBehaviour
         // Create entities
         CreatePlayer();
         CreateExhibits();
+        CreateObstacles();
+        CreateCandleHolders();
         
         // Store initial positions for win condition
         StoreInitialPositions();
@@ -64,32 +79,75 @@ public class GameManager : MonoBehaviour
     
     private void CreatePlayer()
     {
-        // Place player at center of grid
-        Vector2Int playerPos = new Vector2Int(gridWidth / 2+1, gridHeight / 2);
-        Vector3 worldPos = gridManager.GridToWorldPosition(playerPos);
+        // Place player at configured position
+        Vector3 worldPos = gridManager.GridToWorldPosition(playerStartPosition);
         
         GameObject playerObj = Instantiate(playerPrefab, worldPos, Quaternion.identity);
         player = playerObj.GetComponent<PlayerController>();
-        player.Initialize(playerPos);
+        player.Initialize(playerStartPosition);
     }
     
     private void CreateExhibits()
     {
         // Create horizontal moving exhibit
-        Vector2Int horizontalPos = new Vector2Int(2, 2);
-        Vector3 worldPos1 = gridManager.GridToWorldPosition(horizontalPos);
+        Vector3 worldPos1 = gridManager.GridToWorldPosition(horizontalExhibitStartPosition);
         GameObject horizontalObj = Instantiate(horizontalExhibitPrefab, worldPos1, Quaternion.identity);
         HorizontalExhibit horizontalExhibit = horizontalObj.GetComponent<HorizontalExhibit>();
-        horizontalExhibit.Initialize(horizontalPos);
+        horizontalExhibit.Initialize(horizontalExhibitStartPosition);
         exhibits.Add(horizontalExhibit);
         
         // Create circular moving exhibit
-        Vector2Int circularPos = new Vector2Int(6, 6);
-        Vector3 worldPos2 = gridManager.GridToWorldPosition(circularPos);
+        Vector3 worldPos2 = gridManager.GridToWorldPosition(circularExhibitStartPosition);
         GameObject circularObj = Instantiate(circularExhibitPrefab, worldPos2, Quaternion.identity);
         CircularExhibit circularExhibit = circularObj.GetComponent<CircularExhibit>();
-        circularExhibit.Initialize(circularPos);
+        circularExhibit.Initialize(circularExhibitStartPosition);
         exhibits.Add(circularExhibit);
+    }
+    
+    private void CreateObstacles()
+    {
+        if (obstaclePrefab == null) return;
+        
+        foreach (Vector2Int obstaclePos in obstaclePositions)
+        {
+            // Check if position is valid and not occupied by player or exhibits
+            if (GridManager.Instance.IsValidPosition(obstaclePos) && 
+                obstaclePos != playerStartPosition &&
+                obstaclePos != horizontalExhibitStartPosition &&
+                obstaclePos != circularExhibitStartPosition)
+            {
+                Vector3 worldPos = gridManager.GridToWorldPosition(obstaclePos);
+                GameObject obstacleObj = Instantiate(obstaclePrefab, worldPos, Quaternion.identity);
+                ObstacleBase obstacle = obstacleObj.GetComponent<ObstacleBase>();
+                obstacle.Initialize(obstaclePos);
+            }
+            else
+            {
+                Debug.LogWarning($"Cannot place obstacle at {obstaclePos} - position invalid or occupied");
+            }
+        }
+    }
+    
+    private void CreateCandleHolders()
+    {
+        if (candleHolderPrefab == null) return;
+        
+        // Check if position is valid and not occupied by player or exhibits
+        if (GridManager.Instance.IsValidPosition(candleHolderStartPosition) && 
+            candleHolderStartPosition != playerStartPosition &&
+            candleHolderStartPosition != horizontalExhibitStartPosition &&
+            candleHolderStartPosition != circularExhibitStartPosition)
+        {
+            Vector3 worldPos = gridManager.GridToWorldPosition(candleHolderStartPosition);
+            GameObject candleHolderObj = Instantiate(candleHolderPrefab, worldPos, Quaternion.identity);
+            CandleHolder candleHolder = candleHolderObj.GetComponent<CandleHolder>();
+            candleHolder.Initialize(candleHolderStartPosition);
+            candleHolders.Add(candleHolder);
+        }
+        else
+        {
+            Debug.LogWarning($"Cannot place candle holder at {candleHolderStartPosition} - position invalid or occupied");
+        }
     }
     
     private void StoreInitialPositions()
@@ -107,27 +165,28 @@ public class GameManager : MonoBehaviour
         
         Vector2Int newPlayerPos = player.GridPosition + direction;
         
-        // Check if there's an exhibit at the target position
+        // Check if there's an exhibit or candle holder at the target position
         ExhibitBase exhibitAtTarget = GetExhibitAtPosition(newPlayerPos);
+        CandleHolder candleHolderAtTarget = GetCandleHolderAtPosition(newPlayerPos);
         
-        if (exhibitAtTarget != null)
+        if (exhibitAtTarget != null || candleHolderAtTarget != null)
         {
-            // This is a push action - check if the exhibit can be pushed
-            Vector2Int exhibitNewPos = newPlayerPos + direction;
+            // This is a push action - check if the object can be pushed
+            Vector2Int objectNewPos = newPlayerPos + direction;
             
-            // Check if exhibit can be pushed to the new position
-            if (!GridManager.Instance.IsValidPosition(exhibitNewPos))
+            // Check if object can be pushed to the new position (not blocked by wall or obstacle)
+            if (!GridManager.Instance.IsWalkablePosition(objectNewPos))
             {
-                Debug.Log("Cannot push exhibit - would go out of bounds!");
+                Debug.Log("Cannot push object - would go out of bounds or hit obstacle!");
                 return;
             }
             
-            // // Check if there's another exhibit where we want to push
-            // if (GetExhibitAtPosition(exhibitNewPos) != null)
-            // {
-            //     Debug.Log("Cannot push exhibit - another exhibit is in the way!");
-            //     return;
-            // }
+            // Check if there's another exhibit or candle holder where we want to push
+            if (GetExhibitAtPosition(objectNewPos) != null || GetCandleHolderAtPosition(objectNewPos) != null)
+            {
+                Debug.Log("Cannot push object - another object is in the way!");
+                return;
+            }
         }
         
         StartCoroutine(ProcessTurn(direction));
@@ -136,6 +195,16 @@ public class GameManager : MonoBehaviour
     public bool IsExhibitAtPosition(Vector2Int position)
     {
         return GetExhibitAtPosition(position) != null;
+    }
+    
+    public bool IsCandleHolderAtPosition(Vector2Int position)
+    {
+        return GetCandleHolderAtPosition(position) != null;
+    }
+    
+    public bool IsPushableAtPosition(Vector2Int position)
+    {
+        return IsExhibitAtPosition(position) || IsCandleHolderAtPosition(position);
     }
     
     private ExhibitBase GetExhibitAtPosition(Vector2Int position)
@@ -150,6 +219,18 @@ public class GameManager : MonoBehaviour
         return null;
     }
     
+    private CandleHolder GetCandleHolderAtPosition(Vector2Int position)
+    {
+        foreach (CandleHolder candleHolder in candleHolders)
+        {
+            if (candleHolder.GridPosition == position)
+            {
+                return candleHolder;
+            }
+        }
+        return null;
+    }
+    
     private IEnumerator ProcessTurn(Vector2Int playerDirection)
     {
         isProcessingTurn = true;
@@ -158,6 +239,7 @@ public class GameManager : MonoBehaviour
         // Step 1: Calculate all movements
         Vector2Int newPlayerPos = player.GridPosition + playerDirection;
         ExhibitBase pushedExhibit = GetExhibitAtPosition(newPlayerPos);
+        CandleHolder pushedCandleHolder = GetCandleHolderAtPosition(newPlayerPos);
         
         // Calculate exhibit movements and handle conflicts with player
         List<Vector2Int> exhibitNewPositions = new List<Vector2Int>();
@@ -178,8 +260,16 @@ public class GameManager : MonoBehaviour
                 // Normal exhibit movement
                 intendedPos = exhibits[i].GetNextPosition();
                 
+                // Check if exhibit is in a light area (frozen)
+                if (IsExhibitInLightArea(exhibits[i].GridPosition))
+                {
+                    // Exhibit is frozen by light - stays in place
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} frozen by light");
+                }
                 // Check if exhibit wants to move to where player is going
-                if (intendedPos == newPlayerPos)
+                else if (intendedPos == newPlayerPos)
                 {
                     // Exhibit blocked by player - stays in place
                     intendedPos = exhibits[i].GridPosition;
@@ -193,6 +283,14 @@ public class GameManager : MonoBehaviour
                     intendedPos = exhibits[i].GridPosition;
                     canMove = false;
                     Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed exhibit moving to {pushedExhibit.GridPosition + playerDirection}");
+                }
+                // Check if exhibit wants to move to where pushed candle holder is going
+                else if (pushedCandleHolder != null && intendedPos == pushedCandleHolder.GridPosition + playerDirection)
+                {
+                    // Exhibit blocked by pushed candle holder - stays in place
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed candle holder moving to {pushedCandleHolder.GridPosition + playerDirection}");
                 }
             }
             
@@ -224,8 +322,15 @@ public class GameManager : MonoBehaviour
             else
             {
                 // Blocked movement - don't advance pattern, stay in place
-                // This simulates hitting a wall
+                // This simulates hitting a wall, obstacle, or being frozen by light
             }
+        }
+        
+        // Handle candle holder pushing
+        if (pushedCandleHolder != null)
+        {
+            Vector2Int candleHolderNewPos = pushedCandleHolder.GridPosition + playerDirection;
+            pushedCandleHolder.SetPosition(candleHolderNewPos);
         }
         
         // Wait for movement animations (if any)
@@ -284,6 +389,19 @@ public class GameManager : MonoBehaviour
         return true;
     }
     
+    // Check if an exhibit is in the light area of any candle holder
+    private bool IsExhibitInLightArea(Vector2Int exhibitPosition)
+    {
+        foreach (CandleHolder candleHolder in candleHolders)
+        {
+            if (candleHolder.IsPositionInLightArea(exhibitPosition))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     private void EndGame(bool won, string message)
     {
         gameEnded = true;
@@ -312,6 +430,7 @@ public class GameManager : MonoBehaviour
         gameEnded = false;
         isProcessingTurn = false;
         exhibits.Clear();
+        candleHolders.Clear();
         exhibitStartPositions.Clear();
         
         // Destroy existing entities
@@ -325,5 +444,31 @@ public class GameManager : MonoBehaviour
         
         // Reinitialize
         InitializeGame();
+    }
+    
+    // Public getters for other scripts to access
+    public int GridWidth
+    {
+        get { return gridManager.GridWidth; }
+    }
+    
+    public int GridHeight
+    {
+        get { return gridManager.GridHeight; }
+    }
+    
+    public float TileSize
+    {
+        get { return gridManager.TileSize; }
+    }
+    
+    public int MaxTurns
+    {
+        get { return maxTurns; }
+    }
+    
+    public int CurrentTurn
+    {
+        get { return currentTurn; }
     }
 }

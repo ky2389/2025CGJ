@@ -3,7 +3,7 @@ using UnityEngine;
 public abstract class ExhibitBase : MonoBehaviour
 {
     [Header("Exhibit Settings")]
-    public Color exhibitColor = Color.red;
+    [SerializeField] protected Color exhibitColor;
     
     protected Vector2Int gridPosition;
     protected SpriteRenderer spriteRenderer;
@@ -36,8 +36,8 @@ public abstract class ExhibitBase : MonoBehaviour
     {
         Vector2Int nextPos = GetNextPosition();
         
-        // Check if movement is blocked by walls
-        if (GridManager.Instance.IsValidPosition(nextPos))
+        // Check if movement is blocked by walls or obstacles
+        if (GridManager.Instance.IsWalkablePosition(nextPos))
         {
             gridPosition = nextPos;
             transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
@@ -45,15 +45,15 @@ public abstract class ExhibitBase : MonoBehaviour
         }
         else
         {
-            // Blocked by wall, don't advance pattern step
-            Debug.Log($"Exhibit at {gridPosition} blocked by wall, trying to move to {nextPos}");
+            // Blocked by wall or obstacle, don't advance pattern step
+            Debug.Log($"Exhibit at {gridPosition} blocked by wall/obstacle, trying to move to {nextPos}");
         }
     }
     
     // Set position directly (for when pushed by player)
     public virtual void SetPosition(Vector2Int newPosition)
     {
-        if (GridManager.Instance.IsValidPosition(newPosition))
+        if (GridManager.Instance.IsWalkablePosition(newPosition))
         {
             gridPosition = newPosition;
             transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
@@ -61,7 +61,7 @@ public abstract class ExhibitBase : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Cannot set exhibit position to {newPosition} - out of bounds");
+            Debug.Log($"Cannot set exhibit position to {newPosition} - out of bounds or blocked by obstacle");
         }
     }
     
@@ -80,7 +80,7 @@ public abstract class ExhibitBase : MonoBehaviour
         spriteRenderer.sprite = exhibitSprite;
         
         // Scale to fit tile size
-        float scale = GridManager.Instance.tileSize * 0.7f; // 70% of tile size
+        float scale = GridManager.Instance.TileSize * 0.7f; // 70% of tile size
         transform.localScale = new Vector3(scale, scale, 1f);
     }
     

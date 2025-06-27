@@ -3,7 +3,7 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     [Header("Player Settings")]
-    public Color playerColor = Color.blue;
+    [SerializeField] private Color playerColor = Color.blue;
     
     private Vector2Int gridPosition;
     private SpriteRenderer spriteRenderer;
@@ -53,14 +53,14 @@ public class PlayerController : MonoBehaviour
         {
             Vector2Int newPos = gridPosition + direction;
             
-            // Check bounds
-            if (GridManager.Instance.IsValidPosition(newPos))
+            // Check bounds and obstacles
+            if (GridManager.Instance.IsWalkablePosition(newPos))
             {
                 GameManager.Instance.ProcessPlayerInput(direction);
             }
             else
             {
-                Debug.Log("Cannot move outside the grid!");
+                Debug.Log("Cannot move - blocked by wall or obstacle!");
             }
         }
     }
@@ -83,7 +83,7 @@ public class PlayerController : MonoBehaviour
         spriteRenderer.sprite = playerSprite;
         
         // Scale to fit tile size
-        float scale = GridManager.Instance.tileSize * 0.8f; // 80% of tile size
+        float scale = GridManager.Instance.TileSize * 0.8f; // 80% of tile size
         transform.localScale = new Vector3(scale, scale, 1f);
     }
     

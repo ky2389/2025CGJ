@@ -3,14 +3,15 @@ using UnityEngine;
 public class HorizontalExhibit : ExhibitBase
 {
     [Header("Horizontal Movement Settings")]
-    public int moveDistance = 3; // How many tiles to move in each direction
+    [SerializeField] private int moveDistance = 3; // How many tiles to move in each direction
     
     private bool movingRight = true; // Current movement direction
     private int currentMoveCount = 0; // Current steps in current direction
     
     protected override void Awake()
     {
-        exhibitColor = Color.red; // Red color for horizontal exhibits
+        // Set the color for horizontal exhibits (red)
+        exhibitColor = Color.red;
         base.Awake();
     }
     
@@ -43,5 +44,11 @@ public class HorizontalExhibit : ExhibitBase
     public string GetPatternInfo()
     {
         return $"Moving {(movingRight ? "Right" : "Left")}, Step: {currentMoveCount}/{moveDistance}";
+    }
+    
+    // Public getter for move distance
+    public int MoveDistance
+    {
+        get { return moveDistance; }
     }
 }
