@@ -6,14 +6,15 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
     
+   
     [System.Serializable]
     public class ExhibitSpawnData
     {
-        public enum ExhibitType { Horizontal, Vertical, Circular }
-        public ExhibitType type; 
+        public GameObject prefab;
         public Vector2Int spawnPosition;
         public Vector2Int targetPosition;
     }
+
     [System.Serializable]
     public class ExhibitTargetPair
     {
@@ -29,9 +30,7 @@ public class GameManager : MonoBehaviour
     
     [Header("Prefabs")]
     [SerializeField] private GameObject playerPrefab;
-    [SerializeField] private GameObject horizontalExhibitPrefab;
-    [SerializeField] private GameObject circularExhibitPrefab;
-    [SerializeField] private GameObject verticalExhibitPrefab;
+   
     [SerializeField] private GameObject obstaclePrefab;
     [SerializeField] private GameObject candleHolderPrefab;
     
@@ -110,19 +109,14 @@ public class GameManager : MonoBehaviour
         foreach (var data in exhibitSpawnList)
         {
             GameObject prefab = null;
-            switch (data.type)
+
+            if (data.prefab == null)
             {
-                case ExhibitSpawnData.ExhibitType.Horizontal:
-                    prefab = horizontalExhibitPrefab;
-                    break;
-                case ExhibitSpawnData.ExhibitType.Vertical:
-                    prefab = verticalExhibitPrefab;
-                    break;
-                case ExhibitSpawnData.ExhibitType.Circular:
-                    prefab = circularExhibitPrefab;
-                    break;
+                Debug.LogWarning("Exhibit prefab is missing in spawn data");
+                continue;
             }
 
+            
             if (prefab != null)
             {
                 Vector3 worldPos = gridManager.GridToWorldPosition(data.spawnPosition);
