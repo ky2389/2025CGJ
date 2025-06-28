@@ -50,7 +50,7 @@ MonoBehaviour:
   frame1: {fileID: -1296123944, guid: 02fc744c2e216704aa44248473dc9abc, type: 3}
   frame2: {fileID: 271987882, guid: 02fc744c2e216704aa44248473dc9abc, type: 3}
   animationSpeed: 1
-  circleSize: 3
+  circleSize: 2
 --- !u!212 &7252233226358518850
 SpriteRenderer:
   m_ObjectHideFlags: 0
