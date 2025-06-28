@@ -3,22 +3,42 @@ using UnityEngine;
 public abstract class ExhibitBase : MonoBehaviour
 {
     [Header("Exhibit Settings")]
-    [SerializeField] protected Color exhibitColor;
+    [SerializeField] protected Color exhibitColor = Color.red;
     
     protected Vector2Int gridPosition;
     protected SpriteRenderer spriteRenderer;
     protected int patternStep = 0; // Current step in movement pattern
-    
+    [Header("Animation Settings")]
+    [SerializeField] protected Sprite frame1;
+    [SerializeField] protected Sprite frame2;
+    [SerializeField] protected float animationSpeed = 1f; // Time between frames
+
+    private float animationTimer = 0f;
+    private bool isFrame1 = true;
+
+    protected virtual void Update()
+    {
+        // Simple sprite swapping animation
+        animationTimer += Time.deltaTime;
+        if (animationTimer >= animationSpeed)
+        {
+            animationTimer = 0f;
+            isFrame1 = !isFrame1;
+            spriteRenderer.sprite = isFrame1 ? frame1 : frame2;
+        }
+    }
     protected virtual void Awake()
     {
-        // Setup visual representation
+        // Get the sprite renderer component (user will add it manually)
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
         {
-            spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+            Debug.LogError("SpriteRenderer component not found on exhibit! Please add it manually.");
         }
         
-        CreateExhibitSprite();
+        // Scale to fit tile size (32x32 sprites need to be 100x larger)
+        float scale = GridManager.Instance.TileSize / 32f; // Scale factor for 32x32 sprites
+        transform.localScale = new Vector3(scale, scale, 1f);
     }
     
     public virtual void Initialize(Vector2Int startPosition)
@@ -67,22 +87,6 @@ public abstract class ExhibitBase : MonoBehaviour
     
     // Advance to next step in movement pattern
     protected abstract void AdvancePattern();
-    
-    private void CreateExhibitSprite()
-    {
-        // Create a simple texture for the exhibit
-        Texture2D texture = new Texture2D(1, 1);
-        texture.SetPixel(0, 0, exhibitColor);
-        texture.Apply();
-        
-        // Create sprite from texture
-        Sprite exhibitSprite = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
-        spriteRenderer.sprite = exhibitSprite;
-        
-        // Scale to fit tile size
-        float scale = GridManager.Instance.TileSize * 0.7f; // 70% of tile size
-        transform.localScale = new Vector3(scale, scale, 1f);
-    }
     
     public Vector2Int GridPosition
     {

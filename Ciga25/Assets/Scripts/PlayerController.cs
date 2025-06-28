@@ -5,20 +5,32 @@ public class PlayerController : MonoBehaviour
     [Header("Player Settings")]
     [SerializeField] private Color playerColor = Color.blue;
     
+    [Header("Animation Settings")]
+    [SerializeField] private Animator animator; // Reference to the Animator component
+    
     private Vector2Int gridPosition;
     private SpriteRenderer spriteRenderer;
+    private Vector2Int lastDirection = Vector2Int.down; // Default facing direction
+    private bool isPushing = false;
     
     private void Awake()
     {
-        // Setup visual representation
+        // Get the sprite renderer component (user will add it manually)
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (spriteRenderer == null)
         {
-            spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+            Debug.LogError("SpriteRenderer component not found on player! Please add it manually.");
         }
         
-        // Create a simple square sprite for the player
-        CreatePlayerSprite();
+        // Get the animator component if not assigned
+        if (animator == null)
+        {
+            animator = GetComponent<Animator>();
+        }
+        
+        // Scale to fit tile size (32x32 sprites need to be 100x larger)
+        float scale = GridManager.Instance.TileSize / 32f; // Scale factor for 32x32 sprites
+        transform.localScale = new Vector3(scale, scale, 1f);
     }
     
     private void Update()
@@ -30,6 +42,13 @@ public class PlayerController : MonoBehaviour
     {
         gridPosition = startPosition;
         transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
+        
+        // Set initial animation state
+        if (animator != null)
+        {
+            UpdateAnimationDirection(lastDirection);
+            animator.SetBool("IsPushing", false);
+        }
     }
     
     private void HandleInput()
@@ -47,7 +66,7 @@ public class PlayerController : MonoBehaviour
             direction = Vector2Int.left;
         else if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
             direction = Vector2Int.right;
-        
+        UpdateAnimationDirection(direction);
         // Send input to game manager if valid direction
         if (direction != Vector2Int.zero)
         {
@@ -56,6 +75,19 @@ public class PlayerController : MonoBehaviour
             // Check bounds and obstacles
             if (GridManager.Instance.IsWalkablePosition(newPos))
             {
+                // Update direction for animation
+                lastDirection = direction;
+                UpdateAnimationDirection(direction);
+                
+                // Check if this is a push action
+                bool isPushAction = GameManager.Instance.IsPushableAtPosition(newPos);
+                
+                if (isPushAction)
+                {
+                    // Trigger push animation
+                    StartPushAnimation();
+                }
+                
                 GameManager.Instance.ProcessPlayerInput(direction);
             }
             else
@@ -65,30 +97,59 @@ public class PlayerController : MonoBehaviour
         }
     }
     
+    private void UpdateAnimationDirection(Vector2Int direction)
+    {
+        if (animator == null) return;
+        
+        // Set direction parameters for the animator
+        animator.SetFloat("DirectionX", direction.x);
+        animator.SetFloat("DirectionY", direction.y);
+        
+        // Set specific direction booleans
+        animator.SetBool("FacingUp", direction.y > 0);
+        animator.SetBool("FacingDown", direction.y < 0);
+        animator.SetBool("FacingLeft", direction.x < 0);
+        animator.SetBool("FacingRight", direction.x > 0);
+    }
+    
+    private void StartPushAnimation()
+    {
+        if (animator == null) return;
+        
+        isPushing = true;
+        animator.SetBool("IsPushing", true);
+        
+        // Return to idle after push animation completes
+        // This will be handled by the animator transitions
+    }
+    
+    public void EndPushAnimation()
+    {
+        if (animator == null) return;
+        
+        isPushing = false;
+        animator.SetBool("IsPushing", false);
+    }
+    
     public void MoveToPosition(Vector2Int newPosition)
     {
         gridPosition = newPosition;
         transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
-    }
-    
-    private void CreatePlayerSprite()
-    {
-        // Create a simple texture for the player
-        Texture2D texture = new Texture2D(1, 1);
-        texture.SetPixel(0, 0, playerColor);
-        texture.Apply();
         
-        // Create sprite from texture
-        Sprite playerSprite = Sprite.Create(texture, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f), 1f);
-        spriteRenderer.sprite = playerSprite;
-        
-        // Scale to fit tile size
-        float scale = GridManager.Instance.TileSize * 0.8f; // 80% of tile size
-        transform.localScale = new Vector3(scale, scale, 1f);
+        // End push animation after movement completes
+        if (isPushing)
+        {
+            EndPushAnimation();
+        }
     }
     
     public Vector2Int GridPosition
     {
         get { return gridPosition; }
+    }
+    
+    public Vector2Int LastDirection
+    {
+        get { return lastDirection; }
     }
 }

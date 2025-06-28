@@ -333,6 +333,9 @@ public class GameManager : MonoBehaviour
             pushedCandleHolder.SetPosition(candleHolderNewPos);
         }
         
+        // End push animation after all movements are complete
+        player.EndPushAnimation();
+        
         // Wait for movement animations (if any)
         yield return new WaitForSeconds(0.1f);
         

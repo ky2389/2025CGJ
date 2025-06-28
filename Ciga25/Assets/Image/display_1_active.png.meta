@@ -54,7 +54,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 1
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -116,29 +116,29 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: display_1_moving_0
+      name: display_1_active_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 2
-        width: 33
-        height: 30
+        y: 0
+        width: 32
+        height: 32
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 9361f323a8b24b030800000000000000
-      internalID: 3509477882176935481
+      spriteID: 0315a015ceb5f804694507caae5ea2ef
+      internalID: -1296123944
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: display_1_moving_1
+      name: display_1_active_1
       rect:
         serializedVersion: 2
         x: 32
@@ -151,10 +151,10 @@ TextureImporter:
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: cee91c7c1132bb9d0800000000000000
-      internalID: -2757571787561525524
+      spriteID: 4b3bac051148fb74d9993bb1617a546d
+      internalID: 271987882
       vertices: []
       indices: 
       edges: []
@@ -163,7 +163,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 472f92c216d7c4540b0560e5c80ba68b
     internalID: 0
     vertices: []
     indices: 
@@ -173,8 +173,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      display_1_moving_0: 3509477882176935481
-      display_1_moving_1: -2757571787561525524
+      display_1_active_0: -1296123944
+      display_1_active_1: 271987882
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
