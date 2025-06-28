@@ -6,6 +6,20 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
     
+    [System.Serializable]
+    public class ExhibitSpawnData
+    {
+        public enum ExhibitType { Horizontal, Vertical, Circular }
+        public ExhibitType type; 
+        public Vector2Int spawnPosition;
+        public Vector2Int targetPosition;
+    }
+    [System.Serializable]
+    public class ExhibitTargetPair
+    {
+        public ExhibitBase exhibit;
+        public Vector2Int targetPosition;
+    }
     
     [Header("Game Settings")]
     [SerializeField] private int maxTurns = 20;
@@ -13,14 +27,11 @@ public class GameManager : MonoBehaviour
     [Header("Player Settings")]
     [SerializeField] private Vector2Int playerStartPosition = new Vector2Int(5, 4); // Center of 9x9 grid
     
-    [Header("Exhibit Settings")]
-    [SerializeField] private Vector2Int horizontalExhibitStartPosition = new Vector2Int(2, 2);
-    [SerializeField] private Vector2Int circularExhibitStartPosition = new Vector2Int(6, 6);
-    
     [Header("Prefabs")]
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private GameObject horizontalExhibitPrefab;
     [SerializeField] private GameObject circularExhibitPrefab;
+    [SerializeField] private GameObject verticalExhibitPrefab;
     [SerializeField] private GameObject obstaclePrefab;
     [SerializeField] private GameObject candleHolderPrefab;
     
@@ -29,6 +40,11 @@ public class GameManager : MonoBehaviour
     
     [Header("Candle Holder Settings")]
     [SerializeField] private Vector2Int candleHolderStartPosition = new Vector2Int(4, 4);
+    
+    [Header("Exhibit Target Settings")]
+    [SerializeField] private List<ExhibitSpawnData> exhibitSpawnList;
+    private List<ExhibitTargetPair> exhibitTargetPairs = new List<ExhibitTargetPair>();
+    [SerializeField] private GameObject exhibitTargetMarkerPrefab;
     
     // Game state
     private int currentTurn = 0;
@@ -74,6 +90,7 @@ public class GameManager : MonoBehaviour
         
         // Store initial positions for win condition
         StoreInitialPositions();
+        CreateExhibitTargets();
         
         Debug.Log("Game initialized! Use WASD to move. Turn: " + currentTurn + "/" + maxTurns);
     }
@@ -90,19 +107,60 @@ public class GameManager : MonoBehaviour
     
     private void CreateExhibits()
     {
-        // Create horizontal moving exhibit
-        Vector3 worldPos1 = gridManager.GridToWorldPosition(horizontalExhibitStartPosition);
-        GameObject horizontalObj = Instantiate(horizontalExhibitPrefab, worldPos1, Quaternion.identity);
-        HorizontalExhibit horizontalExhibit = horizontalObj.GetComponent<HorizontalExhibit>();
-        horizontalExhibit.Initialize(horizontalExhibitStartPosition);
-        exhibits.Add(horizontalExhibit);
+        foreach (var data in exhibitSpawnList)
+        {
+            GameObject prefab = null;
+            switch (data.type)
+            {
+                case ExhibitSpawnData.ExhibitType.Horizontal:
+                    prefab = horizontalExhibitPrefab;
+                    break;
+                case ExhibitSpawnData.ExhibitType.Vertical:
+                    prefab = verticalExhibitPrefab;
+                    break;
+                case ExhibitSpawnData.ExhibitType.Circular:
+                    prefab = circularExhibitPrefab;
+                    break;
+            }
+
+            if (prefab != null)
+            {
+                Vector3 worldPos = gridManager.GridToWorldPosition(data.spawnPosition);
+                GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity);
+                ExhibitBase exhibit = obj.GetComponent<ExhibitBase>();
+                exhibit.Initialize(data.spawnPosition);
+                exhibits.Add(exhibit);
+
+                // 保存 exhibit 到目标位置的映射（用于判定是否成功）
+                exhibitTargetPairs.Add(new ExhibitTargetPair
+                {
+                    exhibit = exhibit,
+                    targetPosition = data.targetPosition
+                });
+            }
+        }
         
-        // Create circular moving exhibit
-        Vector3 worldPos2 = gridManager.GridToWorldPosition(circularExhibitStartPosition);
-        GameObject circularObj = Instantiate(circularExhibitPrefab, worldPos2, Quaternion.identity);
-        CircularExhibit circularExhibit = circularObj.GetComponent<CircularExhibit>();
-        circularExhibit.Initialize(circularExhibitStartPosition);
-        exhibits.Add(circularExhibit);
+    }
+    
+    private void CreateExhibitTargets()
+    {
+        if (exhibitTargetMarkerPrefab == null) return;
+
+        foreach (var data in exhibitSpawnList)
+        {
+            Vector3 worldPos = gridManager.GridToWorldPosition(data.targetPosition);
+            Instantiate(exhibitTargetMarkerPrefab, worldPos, Quaternion.identity);
+        }
+    }
+    
+    private bool IsOccupiedByExhibit(Vector2Int pos)
+    {
+        foreach (var exhibit in exhibits)
+        {
+            if (exhibit.GridPosition == pos)
+                return true;
+        }
+        return false;
     }
     
     private void CreateObstacles()
@@ -112,16 +170,16 @@ public class GameManager : MonoBehaviour
         foreach (Vector2Int obstaclePos in obstaclePositions)
         {
             // Check if position is valid and not occupied by player or exhibits
-            if (GridManager.Instance.IsValidPosition(obstaclePos) && 
+            if (GridManager.Instance.IsValidPosition(obstaclePos) &&
                 obstaclePos != playerStartPosition &&
-                obstaclePos != horizontalExhibitStartPosition &&
-                obstaclePos != circularExhibitStartPosition)
+                !IsOccupiedByExhibit(obstaclePos))
             {
                 Vector3 worldPos = gridManager.GridToWorldPosition(obstaclePos);
                 GameObject obstacleObj = Instantiate(obstaclePrefab, worldPos, Quaternion.identity);
                 ObstacleBase obstacle = obstacleObj.GetComponent<ObstacleBase>();
                 obstacle.Initialize(obstaclePos);
             }
+            
             else
             {
                 Debug.LogWarning($"Cannot place obstacle at {obstaclePos} - position invalid or occupied");
@@ -136,8 +194,7 @@ public class GameManager : MonoBehaviour
         // Check if position is valid and not occupied by player or exhibits
         if (GridManager.Instance.IsValidPosition(candleHolderStartPosition) && 
             candleHolderStartPosition != playerStartPosition &&
-            candleHolderStartPosition != horizontalExhibitStartPosition &&
-            candleHolderStartPosition != circularExhibitStartPosition)
+            !IsOccupiedByExhibit(candleHolderStartPosition))
         {
             Vector3 worldPos = gridManager.GridToWorldPosition(candleHolderStartPosition);
             GameObject candleHolderObj = Instantiate(candleHolderPrefab, worldPos, Quaternion.identity);
@@ -297,6 +354,7 @@ public class GameManager : MonoBehaviour
             
             exhibitNewPositions.Add(intendedPos);
             exhibitCanMove.Add(canMove);
+            
         }
         
         // Step 2: Check for collisions between exhibits
@@ -355,10 +413,29 @@ public class GameManager : MonoBehaviour
         }
         
         Debug.Log("Turn: " + currentTurn + "/" + maxTurns);
+        
+        if (CheckAllTargetsReached())
+        {
+            EndGame(true, "All target exhibits reached their target positions!");
+            yield break;
+        }
        
         isProcessingTurn = false;
     }
     
+    private bool CheckAllTargetsReached()
+    {
+        foreach (var pair in exhibitTargetPairs)
+        {
+            if (pair.exhibit == null) continue;
+            if (pair.exhibit.GridPosition != pair.targetPosition)
+            {
+                return false; // 还有未达成目标的
+            }
+        }
+        return true; // 所有目标都完成
+    }
+
     private bool CheckExhibitCollisions(List<Vector2Int> exhibitPositions)
     {
         // Check exhibit-to-exhibit collisions
@@ -376,11 +453,11 @@ public class GameManager : MonoBehaviour
         return false;
     }
     
-    private bool CheckCollisions(Vector2Int playerPos, List<Vector2Int> exhibitPositions)
-    {
+    //private bool CheckCollisions(Vector2Int playerPos, List<Vector2Int> exhibitPositions)
+    //{
         // Check exhibit-to-exhibit collisions
-        return CheckExhibitCollisions(exhibitPositions);
-    }
+        //return CheckExhibitCollisions(exhibitPositions);
+    //}
     
     private bool CheckWinCondition()
     {
