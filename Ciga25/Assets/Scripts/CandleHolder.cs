@@ -215,6 +215,22 @@ public class CandleHolder : MonoBehaviour
     {
         isLit = !isLit;
         CreateLightAreaIndicators();
+        
+        // Update sprite based on light state
+        if (candleSpriteRenderer != null)
+        {
+            if (isLit && litSprite != null)
+            {
+                candleSpriteRenderer.sprite = litSprite;
+            }
+            else if (!isLit && extinguishedSprite != null)
+            {
+                candleSpriteRenderer.sprite = extinguishedSprite;
+            }
+        }
+        
+        // Update health bar visibility
+        UpdateHealthBar();
     }
     
     // Set light state
@@ -222,6 +238,36 @@ public class CandleHolder : MonoBehaviour
     {
         isLit = lit;
         CreateLightAreaIndicators();
+        
+        // Update sprite based on light state
+        if (candleSpriteRenderer != null)
+        {
+            if (isLit && litSprite != null)
+            {
+                candleSpriteRenderer.sprite = litSprite;
+            }
+            else if (!isLit && extinguishedSprite != null)
+            {
+                candleSpriteRenderer.sprite = extinguishedSprite;
+            }
+        }
+        
+        // Set flame turns appropriately
+        if (!isLit)
+        {
+            // If setting to unlit, set flame turns to max to indicate fully burned out
+            currentFlameTurns = maxFlameTurns;
+        }
+        else
+        {
+            // If setting to lit, reset flame turns to 0 (fresh flame)
+            currentFlameTurns = 0;
+        }
+        
+        // Update health bar visibility
+        UpdateHealthBar();
+        
+        Debug.Log($"Candle holder at {gridPosition} light state set to: {(isLit ? "LIT" : "UNLIT")}");
     }
     
     // Set light radius
@@ -312,10 +358,17 @@ public class CandleHolder : MonoBehaviour
         currentFlameTurns = 0;
         UpdateHealthBar();
         
-        // Set initial lit sprite
-        if (litSprite != null && candleSpriteRenderer != null)
+        // Set sprite based on current light state
+        if (candleSpriteRenderer != null)
         {
-            candleSpriteRenderer.sprite = litSprite;
+            if (isLit && litSprite != null)
+            {
+                candleSpriteRenderer.sprite = litSprite;
+            }
+            else if (!isLit && extinguishedSprite != null)
+            {
+                candleSpriteRenderer.sprite = extinguishedSprite;
+            }
         }
         
         Debug.Log($"Initialized health bar for candle holder at {gridPosition}");
@@ -351,8 +404,8 @@ public class CandleHolder : MonoBehaviour
             healthBarSprite.transform.localPosition = new Vector3(-offsetX, spriteLocalPos.y, spriteLocalPos.z);
         }
         
-        // Optional: Hide health bar completely when flame is out
-        if (healthPercentage <= 0)
+        // Hide health bar when candle is not lit (either extinguished or created unlit)
+        if (!isLit)
         {
             displayGroup.gameObject.SetActive(false);
         }
