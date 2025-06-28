@@ -250,17 +250,23 @@ MonoBehaviour:
   maxTurns: 1000
   playerStartPosition: {x: 0, y: 0}
   playerPrefab: {fileID: 4422989690621680760, guid: edb5adf2dd86b0e4fab39b9368ec9cee, type: 3}
-  horizontalExhibitPrefab: {fileID: 0}
-  circularExhibitPrefab: {fileID: 0}
+  horizontalExhibitPrefab: {fileID: 4595639466723028713, guid: 0b9ab3a27ba121e439e154e5d26a5008, type: 3}
+  circularExhibitPrefab: {fileID: 6956495222862133517, guid: 06933bcb33aee404a821c6f8aa40127d, type: 3}
   verticalExhibitPrefab: {fileID: 4595639466723028713, guid: bdddd5e8676dab04e947649ba4500f4b, type: 3}
   obstaclePrefab: {fileID: 8541445955990052288, guid: d4e0a2c190dc4e2439a26bca407a77fe, type: 3}
   candleHolderPrefab: {fileID: 7736745266377260034, guid: 4f69ad1cff829784da62b5a2805481e2, type: 3}
   obstaclePositions:
-  - {x: 2, y: 1}
-  - {x: 3, y: 4}
-  candleHolderStartPosition: {x: 4, y: 4}
+  - {x: 2, y: 2}
+  - {x: 2, y: 4}
+  candleHolderStartPosition: {x: 4, y: 1}
   exhibitSpawnList:
   - type: 1
+    spawnPosition: {x: 0, y: 1}
+    targetPosition: {x: 3, y: 0}
+  - type: 0
+    spawnPosition: {x: 1, y: 3}
+    targetPosition: {x: 4, y: 1}
+  - type: 2
     spawnPosition: {x: 1, y: 3}
     targetPosition: {x: 4, y: 1}
   exhibitTargetMarkerPrefab: {fileID: 4595639466723028713, guid: 09fdb6be31c64c7499891b1c90826393, type: 3}
