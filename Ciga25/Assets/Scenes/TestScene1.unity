@@ -356,8 +356,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 212dc0f871fdf24409c4b4970dc28412, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gridWidth: 9
-  gridHeight: 9
+  gridWidth: 10
+  gridHeight: 10
   tileSize: 32
   showGrid: 1
   gridColor: {r: 1, g: 1, b: 1, a: 1}
