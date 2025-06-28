@@ -1,13 +1,13 @@
 fileFormatVersion: 2
-guid: 2ae0e0276365883488d0cb2d49426e85
+guid: d99b7fe87699f0d4a8fe2c7bb56ba774
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7090761022406694634
-    second: display_1_idle_0
+      213: -8549270142848197109
+    second: player-down-moving-sheet_0
   - first:
-      213: -2540728035339155662
-    second: display_1_idle_1
+      213: 4593760840787613505
+    second: player-down-moving-sheet_1
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -40,7 +40,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 0
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -116,7 +116,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: display_1_idle_0
+      name: player-down-moving-sheet_0
       rect:
         serializedVersion: 2
         x: 0
@@ -131,14 +131,14 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 61963482b6e889d90800000000000000
-      internalID: -7090761022406694634
+      spriteID: b0e1eaed914ea5980800000000000000
+      internalID: -8549270142848197109
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: display_1_idle_1
+      name: player-down-moving-sheet_1
       rect:
         serializedVersion: 2
         x: 32
@@ -153,8 +153,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 237cbbe20558dbcd0800000000000000
-      internalID: -2540728035339155662
+      spriteID: 147de3a552150cf30800000000000000
+      internalID: 4593760840787613505
       vertices: []
       indices: 
       edges: []
@@ -163,7 +163,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 0e9712ae484fde844a2bd5a08adc5793
+    spriteID: 390e9e9244aab9749b4df5e1c53618dc
     internalID: 0
     vertices: []
     indices: 
@@ -173,8 +173,8 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      display_1_idle_0: -7090761022406694634
-      display_1_idle_1: -2540728035339155662
+      player-down-moving-sheet_0: -8549270142848197109
+      player-down-moving-sheet_1: 4593760840787613505
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
