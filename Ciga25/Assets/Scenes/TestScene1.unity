@@ -291,8 +291,17 @@ MonoBehaviour:
   candleHolderPrefab: {fileID: 7736745266377260034, guid: 4f69ad1cff829784da62b5a2805481e2, type: 3}
   obstaclePositions:
   - {x: 3, y: 3}
-  candleHolderSpawnList: []
-  exhibitSpawnList: []
+  candleHolderSpawnList:
+  - spawnPosition: {x: 1, y: 1}
+    isLit: 0
+    lightRadius: 1
+  exhibitSpawnList:
+  - prefab: {fileID: 4595639466723028713, guid: 90089ed483b6f4b42a1b0cf857a64fab, type: 3}
+    spawnPosition: {x: 2, y: 2}
+    _targetPosition: {x: 0, y: 0}
+  - prefab: {fileID: 6956495222862133517, guid: 06933bcb33aee404a821c6f8aa40127d, type: 3}
+    spawnPosition: {x: 5, y: 6}
+    _targetPosition: {x: 0, y: 0}
   exhibitTargetMarkerPrefab: {fileID: 0}
   relightButton: {fileID: 191971406}
   gameCamera: {fileID: 1201989324}
