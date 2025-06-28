@@ -152,7 +152,7 @@ public class PlayerController : MonoBehaviour
 
         bool pushing = animator.GetBool("IsPushing");
 
-        Debug.Log($"[Player State] Direction: {direction}, IsPushing: {pushing}");
+        //Debug.Log($"[Player State] Direction: {direction}, IsPushing: {pushing}");
     }
 
 }
