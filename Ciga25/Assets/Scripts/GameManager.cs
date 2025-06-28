@@ -95,6 +95,7 @@ public class GameManager : MonoBehaviour
     private bool gameEnded = false;
     private bool isProcessingTurn = false;
     private bool isRelightModeActive = false; // Whether relight mode is active
+    private bool isArrowKeyPressed = false; // Whether R key is pressed for showing arrows
     
     // Grid and entities
     private GridManager gridManager;
@@ -131,8 +132,16 @@ public class GameManager : MonoBehaviour
     
     private void Update()
     {
-        // Handle mouse input for relighting candle holders
+        if (gameEnded || isProcessingTurn) return;
+        
+        // Handle player movement input
+        player.HandleInput();
+        
+        // Handle relight input
         HandleRelightInput();
+        
+        // Handle arrow visibility input
+        HandleArrowVisibilityInput();
     }
     
     private void InitializeGame()
@@ -149,6 +158,9 @@ public class GameManager : MonoBehaviour
         // Store initial positions for win condition
         StoreInitialPositions();
         CreateExhibitTargets();
+        
+        // Initialize arrows as hidden
+        UpdateExhibitMovementArrows();
         
         Debug.Log("Game initialized! Use WASD to move. Turn: " + currentTurn + "/" + maxTurns);
     }
@@ -727,7 +739,14 @@ public class GameManager : MonoBehaviour
     {
         foreach (ExhibitBase exhibit in exhibits)
         {
-            exhibit.UpdateMovementArrow();
+            if (isArrowKeyPressed)
+            {
+                exhibit.UpdateMovementArrow();
+            }
+            else
+            {
+                exhibit.HideMovementArrow();
+            }
         }
     }
 
@@ -791,5 +810,18 @@ public class GameManager : MonoBehaviour
             }
         }
         
+    }
+
+    // Handle arrow visibility input (R key)
+    private void HandleArrowVisibilityInput()
+    {
+        bool rKeyPressed = Input.GetKey(KeyCode.R);
+        
+        // Only update if the state changed
+        if (rKeyPressed != isArrowKeyPressed)
+        {
+            isArrowKeyPressed = rKeyPressed;
+            UpdateExhibitMovementArrows();
+        }
     }
 }
