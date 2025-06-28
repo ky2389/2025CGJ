@@ -53,6 +53,11 @@ MonoBehaviour:
   frame1: {fileID: 1053156694, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
   frame2: {fileID: -1590712879, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
   animationSpeed: 1
+  daySprite: {fileID: 0}
+  nightSprite: {fileID: 0}
+  shakeDuration: 1
+  shakeIntensity: 0.1
+  shakeSpeed: 10
   moveDistance: 4
   animator: {fileID: 0}
 --- !u!212 &-6940684365670373924

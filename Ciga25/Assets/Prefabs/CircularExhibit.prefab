@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 8997183929500804641}
   - component: {fileID: 9161117706984309676}
   - component: {fileID: 7252233226358518850}
-  - component: {fileID: 3275679816478794498}
   m_Layer: 0
   m_Name: CircularExhibit
   m_TagString: Untagged
@@ -54,6 +53,11 @@ MonoBehaviour:
   frame1: {fileID: -3809202410000412723, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
   frame2: {fileID: 7076269128594025141, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
   animationSpeed: 1
+  daySprite: {fileID: -3809202410000412723, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
+  nightSprite: {fileID: 2849008063530514512, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
+  shakeDuration: 1
+  shakeIntensity: 0.1
+  shakeSpeed: 10
   circleSize: 3
 --- !u!212 &7252233226358518850
 SpriteRenderer:
@@ -110,28 +114,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!95 &3275679816478794498
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6956495222862133517}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 0195af2e0fdcdb643a96ecc8819374b1, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &7760885110766842459
 PrefabInstance:
   m_ObjectHideFlags: 0
