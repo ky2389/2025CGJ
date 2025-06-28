@@ -104,37 +104,62 @@ public class GameManager : MonoBehaviour
         player.Initialize(playerStartPosition);
     }
     
+    // private void CreateExhibits()
+    // {
+    //     foreach (var data in exhibitSpawnList)
+    //     {
+    //         GameObject prefab = null;
+    //
+    //         if (data.prefab == null)
+    //         {
+    //             Debug.LogWarning("Exhibit prefab is missing in spawn data");
+    //             continue;
+    //         }
+    //
+    //         
+    //         if (prefab != null)
+    //         {
+    //             Vector3 worldPos = gridManager.GridToWorldPosition(data.spawnPosition);
+    //             GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity);
+    //             ExhibitBase exhibit = obj.GetComponent<ExhibitBase>();
+    //             exhibit.Initialize(data.spawnPosition);
+    //             exhibits.Add(exhibit);
+    //
+    //             // 保存 exhibit 到目标位置的映射（用于判定是否成功）
+    //             exhibitTargetPairs.Add(new ExhibitTargetPair
+    //             {
+    //                 exhibit = exhibit,
+    //                 targetPosition = data.targetPosition
+    //             });
+    //         }
+    //     }
     private void CreateExhibits()
     {
         foreach (var data in exhibitSpawnList)
         {
-            GameObject prefab = null;
-
             if (data.prefab == null)
             {
                 Debug.LogWarning("Exhibit prefab is missing in spawn data");
                 continue;
             }
 
-            
-            if (prefab != null)
-            {
-                Vector3 worldPos = gridManager.GridToWorldPosition(data.spawnPosition);
-                GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity);
-                ExhibitBase exhibit = obj.GetComponent<ExhibitBase>();
-                exhibit.Initialize(data.spawnPosition);
-                exhibits.Add(exhibit);
+            Vector3 worldPos = gridManager.GridToWorldPosition(data.spawnPosition);
+            GameObject obj = Instantiate(data.prefab, worldPos, Quaternion.identity);
+            ExhibitBase exhibit = obj.GetComponent<ExhibitBase>();
+            exhibit.Initialize(data.spawnPosition);
+            exhibits.Add(exhibit);
 
-                // 保存 exhibit 到目标位置的映射（用于判定是否成功）
-                exhibitTargetPairs.Add(new ExhibitTargetPair
-                {
-                    exhibit = exhibit,
-                    targetPosition = data.targetPosition
-                });
-            }
+            exhibitTargetPairs.Add(new ExhibitTargetPair
+            {
+                exhibit = exhibit,
+                targetPosition = data.targetPosition
+            });
+
+            Debug.Log($"[CreateExhibits] Spawned exhibit at {data.spawnPosition} using {data.prefab.name}");
         }
-        
     }
+    
+    
     
     private void CreateExhibitTargets()
     {
