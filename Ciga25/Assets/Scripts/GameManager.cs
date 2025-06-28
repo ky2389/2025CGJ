@@ -62,8 +62,6 @@ public class GameManager : MonoBehaviour
     
     [Header("Candle Holder Settings")]
     [SerializeField] private List<CandleHolderSpawnData> candleHolderSpawnList;
-    // Legacy single position (kept for backward compatibility)
-    [SerializeField] private Vector2Int candleHolderStartPosition = new Vector2Int(4, 4);
     
     [Header("Exhibit Target Settings")]
     [SerializeField] private List<ExhibitSpawnData> exhibitSpawnList;
@@ -253,14 +251,14 @@ public class GameManager : MonoBehaviour
     {
         if (candleHolderPrefab == null) return;
         
-        // Use spawn list if available, otherwise fall back to single position
+        // Use spawn list if available, otherwise don't create any candle holders
         if (candleHolderSpawnList != null && candleHolderSpawnList.Count > 0)
         {
             CreateCandleHoldersFromSpawnList();
         }
         else
         {
-            CreateSingleCandleHolder();
+            Debug.Log("No candle holders configured in spawn list - skipping candle holder creation");
         }
     }
     
@@ -288,25 +286,6 @@ public class GameManager : MonoBehaviour
             {
                 Debug.LogWarning($"Cannot place candle holder at {data.spawnPosition} - position invalid or occupied");
             }
-        }
-    }
-    
-    private void CreateSingleCandleHolder()
-    {
-        // Legacy method for backward compatibility
-        if (IsValidCandleHolderPosition(candleHolderStartPosition))
-        {
-            Vector3 worldPos = gridManager.GridToWorldPosition(candleHolderStartPosition);
-            GameObject candleHolderObj = Instantiate(candleHolderPrefab, worldPos, Quaternion.identity);
-            CandleHolder candleHolder = candleHolderObj.GetComponent<CandleHolder>();
-            candleHolder.Initialize(candleHolderStartPosition);
-            candleHolders.Add(candleHolder);
-            
-            Debug.Log($"[CreateCandleHolders] Spawned single candle holder at {candleHolderStartPosition}");
-        }
-        else
-        {
-            Debug.LogWarning($"Cannot place candle holder at {candleHolderStartPosition} - position invalid or occupied");
         }
     }
     
