@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class ObstacleBase : MonoBehaviour
 {
@@ -28,6 +29,32 @@ public class ObstacleBase : MonoBehaviour
         transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
         
         // Register this obstacle with the grid manager
+        RegisterWithGridManager();
+    }
+    
+    private void RegisterWithGridManager()
+    {
+        // Try to register immediately
+        if (GridManager.Instance != null)
+        {
+            GridManager.Instance.RegisterObstacle(this);
+        }
+        else
+        {
+            // If GridManager is not ready, try again in the next frame
+            StartCoroutine(RegisterWhenReady());
+        }
+    }
+    
+    private System.Collections.IEnumerator RegisterWhenReady()
+    {
+        // Wait until GridManager is available
+        while (GridManager.Instance == null)
+        {
+            yield return null;
+        }
+        
+        // Now register the obstacle
         GridManager.Instance.RegisterObstacle(this);
     }
     

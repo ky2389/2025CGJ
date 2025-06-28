@@ -27,7 +27,9 @@ public class VerticalExhibit : ExhibitBase
 
         if (moveDistance <= 1)
         {
-            Debug.LogError("Vertical movement distance must be greater than 1");
+            Debug.LogWarning("Vertical movement distance is 1 or less, creating minimal pattern");
+            // Create a minimal pattern: just stay in place
+            movementPattern.Add(Vector2Int.zero);
             return;
         }
 

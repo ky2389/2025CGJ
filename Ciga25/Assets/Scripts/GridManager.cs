@@ -82,6 +82,10 @@ public class GridManager : MonoBehaviour
     // Check if position is blocked by an obstacle
     public bool IsPositionBlocked(Vector2Int gridPos)
     {
+        if(obstacles.Count == 0)
+        {
+            return false;
+        }
         foreach (ObstacleBase obstacle in obstacles)
         {
             if (obstacle.GridPosition == gridPos)
