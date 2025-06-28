@@ -662,7 +662,6 @@ MonoBehaviour:
   candleHolderPrefab: {fileID: 7736745266377260034, guid: 4f69ad1cff829784da62b5a2805481e2, type: 3}
   obstaclePositions:
   - {x: 2, y: 1}
-<<<<<<< Updated upstream
   - {x: 5, y: 0}
   - {x: 1, y: 5}
   - {x: 5, y: 3}
@@ -677,18 +676,6 @@ MonoBehaviour:
   relightButton: {fileID: 0}
   gameCamera: {fileID: 1201989324}
 --- !u!1 &640835770
-=======
-  - {x: 3, y: 4}
-  candleHolderSpawnList: []
-  exhibitSpawnList:
-  - prefab: {fileID: 4595639466723028713, guid: bdddd5e8676dab04e947649ba4500f4b, type: 3}
-    spawnPosition: {x: 1, y: 3}
-    _targetPosition: {x: 0, y: 0}
-  exhibitTargetMarkerPrefab: {fileID: 4595639466723028713, guid: 09fdb6be31c64c7499891b1c90826393, type: 3}
-  relightButton: {fileID: 0}
-  gameCamera: {fileID: 0}
---- !u!1 &741418866
->>>>>>> Stashed changes
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
