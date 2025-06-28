@@ -47,8 +47,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   exhibitColor: {r: 0, g: 0, b: 0, a: 0}
-  frame1: {fileID: -1296123944, guid: 02fc744c2e216704aa44248473dc9abc, type: 3}
-  frame2: {fileID: 271987882, guid: 02fc744c2e216704aa44248473dc9abc, type: 3}
+  frame1: {fileID: -3809202410000412723, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
+  frame2: {fileID: 7076269128594025141, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
   animationSpeed: 1
   circleSize: 2
 --- !u!212 &7252233226358518850
@@ -95,7 +95,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: -1296123944, guid: 02fc744c2e216704aa44248473dc9abc, type: 3}
+  m_Sprite: {fileID: -3809202410000412723, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
