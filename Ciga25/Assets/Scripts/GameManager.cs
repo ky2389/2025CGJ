@@ -6,6 +6,7 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
     
+    
     [Header("Game Settings")]
     [SerializeField] private int maxTurns = 20;
     
@@ -354,6 +355,7 @@ public class GameManager : MonoBehaviour
         }
         
         Debug.Log("Turn: " + currentTurn + "/" + maxTurns);
+       
         isProcessingTurn = false;
     }
     
