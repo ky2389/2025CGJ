@@ -292,6 +292,9 @@ MonoBehaviour:
   maxFlameTurns: 5
   healthBar: {fileID: 3857922759006168229}
   displayGroup: {fileID: 301867940293468017}
+  litSprite: {fileID: 5752659319711790919, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
+  extinguishedSprite: {fileID: 21300000, guid: fdc9812d9ceb7fb419b01ea2a834aec8, type: 3}
+  candleSpriteRenderer: {fileID: 3337603535850843046}
 --- !u!61 &1492601368717695870
 BoxCollider2D:
   m_ObjectHideFlags: 0
