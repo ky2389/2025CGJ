@@ -131,10 +131,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Canvas
       objectReference: {fileID: 0}
-    - target: {fileID: 7194899082076300372, guid: da624b48580ed19478da330363dedcd0, type: 3}
-      propertyPath: m_text
-      value: "\u6559\u5B66\u5173\u53612"
-      objectReference: {fileID: 0}
     - target: {fileID: 7587082944968171490, guid: da624b48580ed19478da330363dedcd0, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -214,14 +210,6 @@ PrefabInstance:
     - target: {fileID: 7587082944968171490, guid: da624b48580ed19478da330363dedcd0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 7725657378435541645, guid: da624b48580ed19478da330363dedcd0, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 331
-      objectReference: {fileID: 0}
-    - target: {fileID: 8109239779925019747, guid: da624b48580ed19478da330363dedcd0, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 412
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
