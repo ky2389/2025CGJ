@@ -14,6 +14,10 @@ public class PlayerController : MonoBehaviour
 
     private SpriteRenderer spriteRenderer;
 
+    // 新增缓存动画状态变量
+    private Vector2Int cachedDirection = Vector2Int.down;
+    private bool cachedIsPushing = false;
+
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -30,7 +34,8 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         HandleInput();
-        PrintPlayerState();
+        // Debug状态打印可根据需要开启
+        // PrintPlayerState();
     }
 
     public void Initialize(Vector2Int startPosition)
@@ -38,11 +43,11 @@ public class PlayerController : MonoBehaviour
         gridPosition = startPosition;
         transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
 
-        if (animator != null)
-        {
-            UpdateAnimatorDirection(lastDirection);
-            animator.SetBool("IsPushing", false);
-        }
+        // 初始化缓存状态
+        cachedDirection = lastDirection;
+        cachedIsPushing = false;
+
+        ApplyCachedAnimationState();
     }
 
     private void HandleInput()
@@ -67,13 +72,11 @@ public class PlayerController : MonoBehaviour
             if (GridManager.Instance.IsWalkablePosition(newPos))
             {
                 lastDirection = direction;
-                UpdateAnimatorDirection(direction);
-
+                
+                // 这里不直接更新动画方向和IsPushing
+                // 改为缓存动画状态，动画切换滞后一帧由GameManager控制
                 bool isPushAction = GameManager.Instance.IsPushableAtPosition(newPos);
-                if (isPushAction)
-                {
-                    StartPushAnimation();
-                }
+                CacheAnimationState(direction, isPushAction);
 
                 GameManager.Instance.ProcessPlayerInput(direction);
             }
@@ -81,23 +84,39 @@ public class PlayerController : MonoBehaviour
             {
                 Debug.Log("Blocked by wall or obstacle.");
             }
-           
-
         }
-        
+    }
+
+    // 缓存动画状态（方向和推动状态）
+    public void CacheAnimationState(Vector2Int direction, bool pushing)
+    {
+        cachedDirection = direction;
+        cachedIsPushing = pushing;
+    }
+
+    // 在下一次行动开始时调用，应用缓存的动画状态
+    public void ApplyCachedAnimationState()
+    {
+        UpdateAnimatorDirection(cachedDirection);
+
+        if (animator != null)
+            animator.SetBool("IsPushing", cachedIsPushing);
+
+        // 同步当前状态变量
+        isPushing = cachedIsPushing;
+        lastDirection = cachedDirection;
     }
 
     private void UpdateAnimatorDirection(Vector2Int direction)
     {
         if (animator == null || direction == Vector2Int.zero) return;
 
-        // Reset all
+        // Reset all direction bools
         animator.SetBool("FacingUp", false);
         animator.SetBool("FacingDown", false);
         animator.SetBool("FacingLeft", false);
         animator.SetBool("FacingRight", false);
 
-        // Set current direction
         if (direction == Vector2Int.up)
             animator.SetBool("FacingUp", true);
         else if (direction == Vector2Int.down)
@@ -108,35 +127,17 @@ public class PlayerController : MonoBehaviour
             animator.SetBool("FacingRight", true);
     }
 
-    private void StartPushAnimation()
-    {
-        if (animator == null) return;
-
-        isPushing = true;
-        animator.SetBool("IsPushing", true);
-    }
-
-    public void EndPushAnimation()
-    {
-        if (animator == null) return;
-
-        isPushing = false;
-        animator.SetBool("IsPushing", false);
-    }
-
     public void MoveToPosition(Vector2Int newPosition)
     {
         gridPosition = newPosition;
         transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
-
-        if (isPushing)
-        {
-            EndPushAnimation();
-        }
+        
+        // 不在这里结束推动动画，交由GameManager下一行动时更新
     }
 
     public Vector2Int GridPosition => gridPosition;
     public Vector2Int LastDirection => lastDirection;
+
     private void PrintPlayerState()
     {
         string direction = "None";
@@ -152,7 +153,6 @@ public class PlayerController : MonoBehaviour
 
         bool pushing = animator.GetBool("IsPushing");
 
-        //Debug.Log($"[Player State] Direction: {direction}, IsPushing: {pushing}");
+        Debug.Log($"[Player State] Direction: {direction}, IsPushing: {pushing}");
     }
-
 }
