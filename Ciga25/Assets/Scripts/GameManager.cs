@@ -22,6 +22,15 @@ public class GameManager : MonoBehaviour
         public Vector2Int targetPosition;
     }
     
+    [System.Serializable]
+    public class CandleHolderSpawnData
+    {
+        public Vector2Int spawnPosition;
+        [Header("Light Settings")]
+        public bool isLit = true;
+        public int lightRadius = 1;
+    }
+    
     // Collision detection result
     [System.Serializable]
     public struct CollisionResult
@@ -52,6 +61,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private Vector2Int[] obstaclePositions = new Vector2Int[0]; // Array of obstacle positions
     
     [Header("Candle Holder Settings")]
+    [SerializeField] private List<CandleHolderSpawnData> candleHolderSpawnList;
+    // Legacy single position (kept for backward compatibility)
     [SerializeField] private Vector2Int candleHolderStartPosition = new Vector2Int(4, 4);
     
     [Header("Exhibit Target Settings")]
@@ -59,10 +70,15 @@ public class GameManager : MonoBehaviour
     private List<ExhibitTargetPair> exhibitTargetPairs = new List<ExhibitTargetPair>();
     [SerializeField] private GameObject exhibitTargetMarkerPrefab;
     
+    [Header("UI Settings")]
+    [SerializeField] private UnityEngine.UI.Button relightButton; // Button to activate relight mode
+    [SerializeField] private Camera gameCamera; // Reference to the game camera for mouse input
+    
     // Game state
     private int currentTurn = 0;
     private bool gameEnded = false;
     private bool isProcessingTurn = false;
+    private bool isRelightModeActive = false; // Whether relight mode is active
     
     // Grid and entities
     private GridManager gridManager;
@@ -94,6 +110,13 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         InitializeGame();
+        SetupRelightButton();
+    }
+    
+    private void Update()
+    {
+        // Handle mouse input for relighting candle holders
+        HandleRelightInput();
     }
     
     private void InitializeGame()
@@ -230,21 +253,79 @@ public class GameManager : MonoBehaviour
     {
         if (candleHolderPrefab == null) return;
         
-        // Check if position is valid and not occupied by player or exhibits
-        if (GridManager.Instance.IsValidPosition(candleHolderStartPosition) && 
-            candleHolderStartPosition != playerStartPosition &&
-            !IsOccupiedByExhibit(candleHolderStartPosition))
+        // Use spawn list if available, otherwise fall back to single position
+        if (candleHolderSpawnList != null && candleHolderSpawnList.Count > 0)
+        {
+            CreateCandleHoldersFromSpawnList();
+        }
+        else
+        {
+            CreateSingleCandleHolder();
+        }
+    }
+    
+    private void CreateCandleHoldersFromSpawnList()
+    {
+        foreach (var data in candleHolderSpawnList)
+        {
+            // Check if position is valid and not occupied
+            if (IsValidCandleHolderPosition(data.spawnPosition))
+            {
+                Vector3 worldPos = gridManager.GridToWorldPosition(data.spawnPosition);
+                GameObject candleHolderObj = Instantiate(candleHolderPrefab, worldPos, Quaternion.identity);
+                CandleHolder candleHolder = candleHolderObj.GetComponent<CandleHolder>();
+                
+                // Initialize with custom settings
+                candleHolder.Initialize(data.spawnPosition);
+                candleHolder.SetLightState(data.isLit);
+                candleHolder.SetLightRadius(data.lightRadius);
+                
+                candleHolders.Add(candleHolder);
+                
+                Debug.Log($"[CreateCandleHolders] Spawned candle holder at {data.spawnPosition} with light radius {data.lightRadius}");
+            }
+            else
+            {
+                Debug.LogWarning($"Cannot place candle holder at {data.spawnPosition} - position invalid or occupied");
+            }
+        }
+    }
+    
+    private void CreateSingleCandleHolder()
+    {
+        // Legacy method for backward compatibility
+        if (IsValidCandleHolderPosition(candleHolderStartPosition))
         {
             Vector3 worldPos = gridManager.GridToWorldPosition(candleHolderStartPosition);
             GameObject candleHolderObj = Instantiate(candleHolderPrefab, worldPos, Quaternion.identity);
             CandleHolder candleHolder = candleHolderObj.GetComponent<CandleHolder>();
             candleHolder.Initialize(candleHolderStartPosition);
             candleHolders.Add(candleHolder);
+            
+            Debug.Log($"[CreateCandleHolders] Spawned single candle holder at {candleHolderStartPosition}");
         }
         else
         {
             Debug.LogWarning($"Cannot place candle holder at {candleHolderStartPosition} - position invalid or occupied");
         }
+    }
+    
+    private bool IsValidCandleHolderPosition(Vector2Int position)
+    {
+        return GridManager.Instance.IsValidPosition(position) && 
+               position != playerStartPosition &&
+               !IsOccupiedByExhibit(position) &&
+               !IsOccupiedByCandleHolder(position);
+    }
+    
+    private bool IsOccupiedByCandleHolder(Vector2Int pos)
+    {
+        foreach (var candleHolder in candleHolders)
+        {
+            if (candleHolder.GridPosition == pos)
+                return true;
+        }
+        return false;
     }
     
     private void StoreInitialPositions()
@@ -449,8 +530,10 @@ public class GameManager : MonoBehaviour
         // 9. 等待动画或效果时间（例如移动动画时长）
         yield return new WaitForSeconds(0.1f);
 
-        // 9. 检查游戏结束条件
+        // 10. 更新烛台火焰状态
+        UpdateCandleHolderFlames();
 
+        // 11. 检查游戏结束条件
 
         if (CheckAllTargetsReached())
         {
@@ -626,5 +709,76 @@ public class GameManager : MonoBehaviour
     public int CurrentTurn
     {
         get { return currentTurn; }
+    }
+
+    // Update all candle holder flames at the end of each turn
+    private void UpdateCandleHolderFlames()
+    {
+        foreach (CandleHolder candleHolder in candleHolders)
+        {
+            candleHolder.OnTurnEnd();
+        }
+    }
+
+    private void SetupRelightButton()
+    {
+        if (relightButton != null)
+        {
+            relightButton.onClick.AddListener(ToggleRelightMode);
+        }
+    }
+    
+    private void ToggleRelightMode()
+    {
+        isRelightModeActive = !isRelightModeActive;
+        
+        if (isRelightModeActive)
+        {
+            Debug.Log("Relight mode activated. Click on a candle holder to relight it.");
+            // You can add visual feedback here (change button color, show cursor, etc.)
+        }
+        else
+        {
+            Debug.Log("Relight mode deactivated.");
+            // You can add visual feedback here (restore button color, hide cursor, etc.)
+        }
+    }
+    
+    private void HandleRelightInput()
+    {
+        if (!isRelightModeActive || gameEnded || isProcessingTurn) return;
+        
+        if (Input.GetMouseButtonDown(0)) // Left mouse click
+        {
+            Vector3 mousePosition = Input.mousePosition;
+            Ray ray = gameCamera.ScreenPointToRay(mousePosition);
+            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
+            
+            if (hit.collider != null)
+            {
+                // Check if we clicked on a candle holder
+                CandleHolder clickedCandleHolder = hit.collider.GetComponent<CandleHolder>();
+                if (clickedCandleHolder != null)
+                {
+                    // Relight the candle holder
+                    clickedCandleHolder.RelightFlame();
+                    
+                    // Deactivate relight mode
+                    isRelightModeActive = false;
+                    Debug.Log("Candle holder relit! Relight mode deactivated.");
+                }
+                else
+                {
+                    isRelightModeActive = false;
+                    Debug.Log("Relight mode cancelled.");
+                }
+            }
+            else
+            {
+                isRelightModeActive = false;
+                Debug.Log("Relight mode cancelled.");
+            }
+        }
+        
     }
 }
