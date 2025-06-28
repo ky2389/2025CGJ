@@ -71,6 +71,16 @@ public class PlayerController : MonoBehaviour
 
             if (GridManager.Instance.IsWalkablePosition(newPos))
             {
+                // Check if we're pushing something and if it can be pushed
+                if (GameManager.Instance.IsPushableAtPosition(newPos))
+                {
+                    if (!CanPushEntityAtPosition(newPos, direction))
+                    {
+                        Debug.Log("Blocked by wall or obstacle.");
+                        return;
+                    }
+                }
+                
                 lastDirection = direction;
                 
                 // 这里不直接更新动画方向和IsPushing
@@ -85,6 +95,26 @@ public class PlayerController : MonoBehaviour
                 Debug.Log("Blocked by wall or obstacle.");
             }
         }
+    }
+
+    // Check if an entity at the given position can be pushed in the given direction
+    private bool CanPushEntityAtPosition(Vector2Int position, Vector2Int direction)
+    {
+        Vector2Int pushTargetPos = position + direction;
+        
+        // Check if the target position is walkable
+        if (!GridManager.Instance.IsWalkablePosition(pushTargetPos))
+        {
+            return false;
+        }
+        
+        // Check if the target position is occupied by another entity
+        if (GameManager.Instance.IsPositionOccupied(pushTargetPos))
+        {
+            return false;
+        }
+        
+        return true;
     }
 
     // 缓存动画状态（方向和推动状态）

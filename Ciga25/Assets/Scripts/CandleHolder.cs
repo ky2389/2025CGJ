@@ -161,21 +161,32 @@ public class CandleHolder : MonoBehaviour
     // Set position directly (for when pushed by player)
     public void SetPosition(Vector2Int newPosition)
     {
-        if (GridManager.Instance.IsWalkablePosition(newPosition))
+        // Validate the new position before setting it
+        if (!GridManager.Instance.IsValidPosition(newPosition))
         {
-            gridPosition = newPosition;
-            transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
-            
-            // Update light area indicators
-            UpdateLightIndicatorPositions();
+            Debug.LogWarning($"Cannot set candle holder position to {newPosition} - position out of bounds");
+            return;
         }
-        else
+        
+        if (GridManager.Instance.IsPositionBlocked(newPosition))
         {
-            Debug.Log($"Cannot set candle holder position to {newPosition} - out of bounds or blocked by obstacle");
-            // Clear indicators when blocked to prevent old indicators from remaining
-            ClearLightAreaIndicators();
-            CreateLightAreaIndicators();
+            Debug.LogWarning($"Cannot set candle holder position to {newPosition} - position blocked by obstacle");
+            return;
         }
+        
+        // Check if the new position would overlap with any entity
+        if (GameManager.Instance != null && GameManager.Instance.IsPositionOccupied(newPosition))
+        {
+            Debug.LogWarning($"Cannot set candle holder position to {newPosition} - position occupied by another entity");
+            return;
+        }
+        
+        // Position is valid, update it
+        gridPosition = newPosition;
+        transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
+        
+        // Update light area indicators
+        UpdateLightIndicatorPositions();
     }
     
     // Toggle the light on/off

@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   exhibitColor: {r: 1, g: 0, b: 0, a: 1}
+  signSprite: {fileID: -7778365389380507446, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
   frame1: {fileID: 8210781461733459598, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
   frame2: {fileID: 3471906921458862427, guid: fdad40b5603b8b5458ee4bf0cbf49988, type: 3}
   animationSpeed: 1
