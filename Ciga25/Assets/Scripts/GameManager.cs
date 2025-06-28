@@ -22,6 +22,20 @@ public class GameManager : MonoBehaviour
         public Vector2Int targetPosition;
     }
     
+    // Collision detection result
+    [System.Serializable]
+    public struct CollisionResult
+    {
+        public bool hasCollision;
+        public string collisionMessage;
+        
+        public CollisionResult(bool hasCollision, string message)
+        {
+            this.hasCollision = hasCollision;
+            this.collisionMessage = message;
+        }
+    }
+    
     [Header("Game Settings")]
     [SerializeField] private int maxTurns = 20;
     
@@ -56,6 +70,12 @@ public class GameManager : MonoBehaviour
     private List<ExhibitBase> exhibits = new List<ExhibitBase>();
     private List<CandleHolder> candleHolders = new List<CandleHolder>();
     private Dictionary<Vector2Int, Vector2Int> exhibitStartPositions = new Dictionary<Vector2Int, Vector2Int>();
+    
+    // Public property for accessing player
+    public PlayerController Player
+    {
+        get { return player; }
+    }
     
     private void Awake()
     {
@@ -262,6 +282,24 @@ public class GameManager : MonoBehaviour
         return IsExhibitAtPosition(position) || IsCandleHolderAtPosition(position);
     }
     
+    // Check if a position is occupied by any entity (player, exhibit, or candle holder)
+    public bool IsPositionOccupied(Vector2Int position)
+    {
+        // Check if player is at this position
+        if (player != null && player.GridPosition == position)
+            return true;
+            
+        // Check if any exhibit is at this position
+        if (IsExhibitAtPosition(position))
+            return true;
+            
+        // Check if any candle holder is at this position
+        if (IsCandleHolderAtPosition(position))
+            return true;
+            
+        return false;
+    }
+    
     private ExhibitBase GetExhibitAtPosition(Vector2Int position)
     {
         foreach (ExhibitBase exhibit in exhibits)
@@ -287,132 +325,148 @@ public class GameManager : MonoBehaviour
     }
     
     private IEnumerator ProcessTurn(Vector2Int playerDirection)
-{
-    isProcessingTurn = true;
-    currentTurn++;
-
-    // 1. 在行动开始时让玩家应用缓存的动画状态，动画状态滞后于移动一步
-    player.ApplyCachedAnimationState();
-
-    Vector2Int newPlayerPos = player.GridPosition + playerDirection;
-
-    // 获取推动的展品和烛台（如果有）
-    ExhibitBase pushedExhibit = GetExhibitAtPosition(newPlayerPos);
-    CandleHolder pushedCandleHolder = GetCandleHolderAtPosition(newPlayerPos);
-
-    // 2. 计算所有展品的新位置和移动许可状态
-    List<Vector2Int> exhibitNewPositions = new List<Vector2Int>();
-    List<bool> exhibitCanMove = new List<bool>();
-
-    for (int i = 0; i < exhibits.Count; i++)
     {
-        Vector2Int intendedPos;
-        bool canMove = true;
+        isProcessingTurn = true;
+        currentTurn++;
 
-        if (exhibits[i] == pushedExhibit)
-        {
-            intendedPos = exhibits[i].GridPosition + playerDirection;
-        }
-        else
-        {
-            intendedPos = exhibits[i].GetNextPosition();
+        // 1. 在行动开始时让玩家应用缓存的动画状态，动画状态滞后于移动一步
+        player.ApplyCachedAnimationState();
 
-            // 检查展品是否被烛光冻结
-            if (IsExhibitInLightArea(exhibits[i].GridPosition))
+        Vector2Int newPlayerPos = player.GridPosition + playerDirection;
+
+        // 获取推动的展品和烛台（如果有）
+        ExhibitBase pushedExhibit = GetExhibitAtPosition(newPlayerPos);
+        CandleHolder pushedCandleHolder = GetCandleHolderAtPosition(newPlayerPos);
+
+        // 检查烛台推动是否有效
+        if (pushedCandleHolder != null)
+        {
+            Vector2Int candleHolderNewPos = pushedCandleHolder.GridPosition + playerDirection;
+            if (!GridManager.Instance.IsWalkablePosition(candleHolderNewPos))
             {
-                intendedPos = exhibits[i].GridPosition;
-                canMove = false;
-                Debug.Log($"Exhibit at {exhibits[i].GridPosition} frozen by light");
-            }
-            // 如果想移动的位置被玩家占据
-            else if (intendedPos == newPlayerPos)
-            {
-                intendedPos = exhibits[i].GridPosition;
-                canMove = false;
-                Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by player moving to {newPlayerPos}");
-            }
-            // 被推动展品阻挡
-            else if (pushedExhibit != null && intendedPos == pushedExhibit.GridPosition + playerDirection)
-            {
-                intendedPos = exhibits[i].GridPosition;
-                canMove = false;
-                Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed exhibit moving to {pushedExhibit.GridPosition + playerDirection}");
-            }
-            // 被推动烛台阻挡
-            else if (pushedCandleHolder != null && intendedPos == pushedCandleHolder.GridPosition + playerDirection)
-            {
-                intendedPos = exhibits[i].GridPosition;
-                canMove = false;
-                Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed candle holder moving to {pushedCandleHolder.GridPosition + playerDirection}");
+                // 烛台无法被推动到目标位置，阻止玩家移动
+                Debug.Log($"Cannot push candle holder to {candleHolderNewPos} - position blocked");
+                isProcessingTurn = false;
+                yield break;
             }
         }
 
-        exhibitNewPositions.Add(intendedPos);
-        exhibitCanMove.Add(canMove);
-    }
+        // 2. 计算所有展品的新位置和移动许可状态
+        List<Vector2Int> exhibitNewPositions = new List<Vector2Int>();
+        List<bool> exhibitCanMove = new List<bool>();
 
-    // 3. 检查展品间是否有碰撞
-    if (CheckExhibitCollisions(exhibitNewPositions))
-    {
-        EndGame(false, "Exhibits collided!");
-        yield break;
-    }
-
-    // 4. 玩家瞬移到新位置
-    player.MoveToPosition(newPlayerPos);
-
-    // 5. 展品移动
-    for (int i = 0; i < exhibits.Count; i++)
-    {
-        if (exhibits[i] == pushedExhibit)
+        for (int i = 0; i < exhibits.Count; i++)
         {
-            exhibits[i].SetPosition(exhibitNewPositions[i]);
+            Vector2Int intendedPos;
+            bool canMove = true;
+
+            if (exhibits[i] == pushedExhibit)
+            {
+                intendedPos = exhibits[i].GridPosition + playerDirection;
+            }
+            else
+            {
+                intendedPos = exhibits[i].GetNextPosition();
+
+                // 检查展品是否被烛光冻结
+                if (IsExhibitInLightArea(exhibits[i].GridPosition))
+                {
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} frozen by light");
+                }
+                // 如果想移动的位置被玩家占据
+                else if (intendedPos == newPlayerPos)
+                {
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by player moving to {newPlayerPos}");
+                }
+                // 被推动展品阻挡
+                else if (pushedExhibit != null && intendedPos == pushedExhibit.GridPosition + playerDirection)
+                {
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed exhibit moving to {pushedExhibit.GridPosition + playerDirection}");
+                }
+                // 被推动烛台阻挡
+                else if (pushedCandleHolder != null && intendedPos == pushedCandleHolder.GridPosition + playerDirection)
+                {
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed candle holder moving to {pushedCandleHolder.GridPosition + playerDirection}");
+                }
+            }
+
+            exhibitNewPositions.Add(intendedPos);
+            exhibitCanMove.Add(canMove);
         }
-        else if (exhibitCanMove[i])
+
+        // 3. 检查展品间是否有碰撞
+        if (CheckExhibitCollisions(exhibitNewPositions))
         {
-            exhibits[i].MoveToNextPosition();
+            EndGame(false, "Exhibits collided!");
+            yield break;
         }
-        else
+
+        // 4. 玩家瞬移到新位置
+        player.MoveToPosition(newPlayerPos);
+
+        // 5. 展品移动
+        for (int i = 0; i < exhibits.Count; i++)
         {
-            // 受阻展品保持原位，不更新位置
+            if (exhibits[i] == pushedExhibit)
+            {
+                exhibits[i].SetPosition(exhibitNewPositions[i]);
+            }
+            else if (exhibitCanMove[i])
+            {
+                exhibits[i].MoveToNextPosition();
+            }
+            else
+            {
+                // 受阻展品保持原位，不更新位置
+            }
         }
-    }
 
-    // 6. 推动烛台移动（如果有）
-    if (pushedCandleHolder != null)
-    {
-        Vector2Int candleHolderNewPos = pushedCandleHolder.GridPosition + playerDirection;
-        pushedCandleHolder.SetPosition(candleHolderNewPos);
-    }
-
-    // 7. 不再立即结束推动动画，等待下一行动开始时更新动画状态
-
-    // 8. 等待动画或效果时间（例如移动动画时长）
-    yield return new WaitForSeconds(0.1f);
-
-    // 9. 检查游戏结束条件
-    if (currentTurn == maxTurns)
-    {
-        if (CheckWinCondition())
+        // 6. 推动烛台移动（如果有）
+        if (pushedCandleHolder != null)
         {
-            EndGame(true, "All exhibits returned to original positions!");
+            Vector2Int candleHolderNewPos = pushedCandleHolder.GridPosition + playerDirection;
+            pushedCandleHolder.SetPosition(candleHolderNewPos);
         }
-        else
+
+        // 7. 检查所有实体碰撞（移动后的位置）
+        CollisionResult collisionResult = CheckAllEntityCollisions();
+        if (collisionResult.hasCollision)
         {
-            EndGame(false, "Time's up!");
+            EndGame(false, collisionResult.collisionMessage);
+            yield break;
         }
+
+        // 8. 不再立即结束推动动画，等待下一行动开始时更新动画状态
+
+        // 9. 等待动画或效果时间（例如移动动画时长）
+        yield return new WaitForSeconds(0.1f);
+
+        // 9. 检查游戏结束条件
+
+
+        if (CheckAllTargetsReached())
+        {
+            EndGame(true, "All target exhibits reached their target positions!");
+            yield break;
+        }
+        if (currentTurn == maxTurns)
+        {
+            {
+                EndGame(false, "Time's up!");
+            }
+        }
+        Debug.Log("Turn: " + currentTurn + "/" + maxTurns);
+
+        isProcessingTurn = false;
     }
-
-    if (CheckAllTargetsReached())
-    {
-        EndGame(true, "All target exhibits reached their target positions!");
-        yield break;
-    }
-
-    Debug.Log("Turn: " + currentTurn + "/" + maxTurns);
-
-    isProcessingTurn = false;
-}
 
     
     private bool CheckAllTargetsReached()
@@ -451,17 +505,17 @@ public class GameManager : MonoBehaviour
         //return CheckExhibitCollisions(exhibitPositions);
     //}
     
-    private bool CheckWinCondition()
-    {
-        foreach (ExhibitBase exhibit in exhibits)
-        {
-            if (!exhibitStartPositions.ContainsKey(exhibit.GridPosition))
-            {
-                return false;
-            }
-        }
-        return true;
-    }
+    // private bool CheckWinCondition()
+    // {
+    //     foreach (ExhibitBase exhibit in exhibits)
+    //     {
+    //         if (!exhibitStartPositions.ContainsKey(exhibit.GridPosition))
+    //         {
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // }
     
     // Check if an exhibit is in the light area of any candle holder
     private bool IsExhibitInLightArea(Vector2Int exhibitPosition)
@@ -474,6 +528,57 @@ public class GameManager : MonoBehaviour
             }
         }
         return false;
+    }
+    
+    private CollisionResult CheckAllEntityCollisions()
+    {
+        // Check exhibit-to-exhibit collisions (Game Over)
+        for (int i = 0; i < exhibits.Count; i++)
+        {
+            for (int j = i + 1; j < exhibits.Count; j++)
+            {
+                if (exhibits[i].GridPosition == exhibits[j].GridPosition)
+                {
+                    Debug.Log($"Exhibit collision detected at position {exhibits[i].GridPosition}");
+                    return new CollisionResult(true, "Exhibits collided!");
+                }
+            }
+        }
+        
+        // Check candle holder collisions with exhibits (Game Over)
+        foreach (CandleHolder candleHolder in candleHolders)
+        {
+            foreach (ExhibitBase exhibit in exhibits)
+            {
+                if (candleHolder.GridPosition == exhibit.GridPosition)
+                {
+                    Debug.Log($"Candle holder collided with exhibit at position {candleHolder.GridPosition}");
+                    return new CollisionResult(true, "Candle holder collided with exhibit!");
+                }
+            }
+        }
+        
+        // Check player collisions with exhibits (should not happen after movement)
+        foreach (ExhibitBase exhibit in exhibits)
+        {
+            if (player.GridPosition == exhibit.GridPosition)
+            {
+                Debug.Log($"Player collided with exhibit at position {player.GridPosition}");
+                return new CollisionResult(true, "Player collided with exhibit!");
+            }
+        }
+        
+        // Check player collisions with candle holders (should not happen after movement)
+        foreach (CandleHolder candleHolder in candleHolders)
+        {
+            if (player.GridPosition == candleHolder.GridPosition)
+            {
+                Debug.Log($"Player collided with candle holder at position {player.GridPosition}");
+                return new CollisionResult(true, "Player collided with candle holder!");
+            }
+        }
+        
+        return new CollisionResult(false, "");
     }
     
     private void EndGame(bool won, string message)
@@ -495,29 +600,6 @@ public class GameManager : MonoBehaviour
     public bool IsGameEnded()
     {
         return gameEnded;
-    }
-    
-    public void RestartGame()
-    {
-        // Reset game state
-        currentTurn = 0;
-        gameEnded = false;
-        isProcessingTurn = false;
-        exhibits.Clear();
-        candleHolders.Clear();
-        exhibitStartPositions.Clear();
-        
-        // Destroy existing entities
-        if (player != null)
-            DestroyImmediate(player.gameObject);
-        
-        foreach (Transform child in transform)
-        {
-            DestroyImmediate(child.gameObject);
-        }
-        
-        // Reinitialize
-        InitializeGame();
     }
     
     // Public getters for other scripts to access
