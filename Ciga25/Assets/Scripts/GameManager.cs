@@ -221,32 +221,32 @@ public class GameManager : MonoBehaviour
     {
         if (gameEnded || isProcessingTurn) return;
         
-        // Vector2Int newPlayerPos = player.GridPosition + direction;
-        //
-        // // Check if there's an exhibit or candle holder at the target position
-        // ExhibitBase exhibitAtTarget = GetExhibitAtPosition(newPlayerPos);
-        // CandleHolder candleHolderAtTarget = GetCandleHolderAtPosition(newPlayerPos);
-        //
-        // if (exhibitAtTarget != null || candleHolderAtTarget != null)
-        // {
-        //     // This is a push action - check if the object can be pushed
-        //     Vector2Int objectNewPos = newPlayerPos + direction;
-        //     
-        //     // Check if object can be pushed to the new position (not blocked by wall or obstacle)
-        //     if (!GridManager.Instance.IsWalkablePosition(objectNewPos))
-        //     {
-        //         Debug.Log("Cannot push object - would go out of bounds or hit obstacle!");
-        //         return;
-        //     }
-        //     
-        //     // Check if there's another exhibit or candle holder where we want to push
-        //     if (GetExhibitAtPosition(objectNewPos) != null || GetCandleHolderAtPosition(objectNewPos) != null)
-        //     {
-        //         Debug.Log("Cannot push object - another object is in the way!");
-        //         return;
-        //     }
-        // }
-        //
+        Vector2Int newPlayerPos = player.GridPosition + direction;
+        
+        // Check if there's an exhibit or candle holder at the target position
+        ExhibitBase exhibitAtTarget = GetExhibitAtPosition(newPlayerPos);
+        CandleHolder candleHolderAtTarget = GetCandleHolderAtPosition(newPlayerPos);
+        
+        if (exhibitAtTarget != null || candleHolderAtTarget != null)
+        {
+            // This is a push action - check if the object can be pushed
+            Vector2Int objectNewPos = newPlayerPos + direction;
+            
+            // Check if object can be pushed to the new position (not blocked by wall or obstacle)
+            if (!GridManager.Instance.IsWalkablePosition(objectNewPos))
+            {
+                Debug.Log("Cannot push object - would go out of bounds or hit obstacle!");
+                return;
+            }
+            
+            // Check if there's another exhibit or candle holder where we want to push
+            if (GetExhibitAtPosition(objectNewPos) != null || GetCandleHolderAtPosition(objectNewPos) != null)
+            {
+                Debug.Log("Cannot push object - another object is in the way!");
+                return;
+            }
+        }
+        
         StartCoroutine(ProcessTurn(direction));
     }
     
@@ -290,136 +290,138 @@ public class GameManager : MonoBehaviour
     }
     
     private IEnumerator ProcessTurn(Vector2Int playerDirection)
-{
-    isProcessingTurn = true;
-    currentTurn++;
-
-    // 1. 在行动开始时让玩家应用缓存的动画状态，动画状态滞后于移动一步
-    player.ApplyCachedAnimationState();
-
-    Vector2Int newPlayerPos = player.GridPosition + playerDirection;
-
-    // 获取推动的展品和烛台（如果有）
-    ExhibitBase pushedExhibit = GetExhibitAtPosition(newPlayerPos);
-    CandleHolder pushedCandleHolder = GetCandleHolderAtPosition(newPlayerPos);
-
-    // 2. 计算所有展品的新位置和移动许可状态
-    List<Vector2Int> exhibitNewPositions = new List<Vector2Int>();
-    List<bool> exhibitCanMove = new List<bool>();
-
-    for (int i = 0; i < exhibits.Count; i++)
     {
-        Vector2Int intendedPos;
-        bool canMove = true;
-
-        if (exhibits[i] == pushedExhibit)
+        isProcessingTurn = true;
+        currentTurn++;
+        
+        // Step 1: Calculate all movements
+        Vector2Int newPlayerPos = player.GridPosition + playerDirection;
+        ExhibitBase pushedExhibit = GetExhibitAtPosition(newPlayerPos);
+        CandleHolder pushedCandleHolder = GetCandleHolderAtPosition(newPlayerPos);
+        
+        // Calculate exhibit movements and handle conflicts with player
+        List<Vector2Int> exhibitNewPositions = new List<Vector2Int>();
+        List<bool> exhibitCanMove = new List<bool>(); // Track which exhibits can move
+        
+        for (int i = 0; i < exhibits.Count; i++)
         {
-            intendedPos = exhibits[i].GridPosition + playerDirection;
-        }
-        else
-        {
-            intendedPos = exhibits[i].GetNextPosition();
-
-            // 检查展品是否被烛光冻结
-            if (IsExhibitInLightArea(exhibits[i].GridPosition))
+            Vector2Int intendedPos;
+            bool canMove = true;
+            
+            if (exhibits[i] == pushedExhibit)
             {
-                intendedPos = exhibits[i].GridPosition;
-                canMove = false;
-                Debug.Log($"Exhibit at {exhibits[i].GridPosition} frozen by light");
+                // Pushed exhibit moves in player direction
+                intendedPos = exhibits[i].GridPosition + playerDirection;
             }
-            // 如果想移动的位置被玩家占据
-            else if (intendedPos == newPlayerPos)
+            else
             {
-                intendedPos = exhibits[i].GridPosition;
-                canMove = false;
-                Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by player moving to {newPlayerPos}");
+                // Normal exhibit movement
+                intendedPos = exhibits[i].GetNextPosition();
+                
+                // Check if exhibit is in a light area (frozen)
+                if (IsExhibitInLightArea(exhibits[i].GridPosition))
+                {
+                    // Exhibit is frozen by light - stays in place
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} frozen by light");
+                }
+                // Check if exhibit wants to move to where player is going
+                else if (intendedPos == newPlayerPos)
+                {
+                    // Exhibit blocked by player - stays in place
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by player moving to {newPlayerPos}");
+                }
+                // Check if exhibit wants to move to where pushed exhibit is going
+                else if (pushedExhibit != null && intendedPos == pushedExhibit.GridPosition + playerDirection)
+                {
+                    // Exhibit blocked by pushed exhibit - stays in place
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed exhibit moving to {pushedExhibit.GridPosition + playerDirection}");
+                }
+                // Check if exhibit wants to move to where pushed candle holder is going
+                else if (pushedCandleHolder != null && intendedPos == pushedCandleHolder.GridPosition + playerDirection)
+                {
+                    // Exhibit blocked by pushed candle holder - stays in place
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed candle holder moving to {pushedCandleHolder.GridPosition + playerDirection}");
+                }
             }
-            // 被推动展品阻挡
-            else if (pushedExhibit != null && intendedPos == pushedExhibit.GridPosition + playerDirection)
+            
+            exhibitNewPositions.Add(intendedPos);
+            exhibitCanMove.Add(canMove);
+            
+        }
+        
+        // Step 2: Check for collisions between exhibits
+        if (CheckExhibitCollisions(exhibitNewPositions))
+        {
+            EndGame(false, "Exhibits collided!");
+            yield break;
+        }
+        
+        // Step 3: Execute movements
+        player.MoveToPosition(newPlayerPos);
+        
+        for (int i = 0; i < exhibits.Count; i++)
+        {
+            if (exhibits[i] == pushedExhibit)
             {
-                intendedPos = exhibits[i].GridPosition;
-                canMove = false;
-                Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed exhibit moving to {pushedExhibit.GridPosition + playerDirection}");
+                exhibits[i].SetPosition(exhibitNewPositions[i]);
             }
-            // 被推动烛台阻挡
-            else if (pushedCandleHolder != null && intendedPos == pushedCandleHolder.GridPosition + playerDirection)
+            else if (exhibitCanMove[i])
             {
-                intendedPos = exhibits[i].GridPosition;
-                canMove = false;
-                Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed candle holder moving to {pushedCandleHolder.GridPosition + playerDirection}");
+                // Normal movement - advance pattern
+                exhibits[i].MoveToNextPosition();
+            }
+            else
+            {
+                // Blocked movement - don't advance pattern, stay in place
+                // This simulates hitting a wall, obstacle, or being frozen by light
             }
         }
-
-        exhibitNewPositions.Add(intendedPos);
-        exhibitCanMove.Add(canMove);
-    }
-
-    // 3. 检查展品间是否有碰撞
-    if (CheckExhibitCollisions(exhibitNewPositions))
-    {
-        EndGame(false, "Exhibits collided!");
-        yield break;
-    }
-
-    // 4. 玩家瞬移到新位置
-    player.MoveToPosition(newPlayerPos);
-
-    // 5. 展品移动
-    for (int i = 0; i < exhibits.Count; i++)
-    {
-        if (exhibits[i] == pushedExhibit)
+        
+        // Handle candle holder pushing
+        if (pushedCandleHolder != null)
         {
-            exhibits[i].SetPosition(exhibitNewPositions[i]);
+            Vector2Int candleHolderNewPos = pushedCandleHolder.GridPosition + playerDirection;
+            pushedCandleHolder.SetPosition(candleHolderNewPos);
         }
-        else if (exhibitCanMove[i])
+        
+        // End push animation after all movements are complete
+        player.EndPushAnimation();
+        
+        // Wait for movement animations (if any)
+        yield return new WaitForSeconds(0.1f);
+        
+        // Step 4: Check win/lose conditions
+        if (currentTurn == maxTurns)
         {
-            exhibits[i].MoveToNextPosition();
+            // Check win condition
+            if (CheckWinCondition())
+            {
+                EndGame(true, "All exhibits returned to original positions!");
+            }
+            else
+            {
+                EndGame(false, "Time's up!");
+            }
         }
-        else
+        
+        Debug.Log("Turn: " + currentTurn + "/" + maxTurns);
+        
+        if (CheckAllTargetsReached())
         {
-            // 受阻展品保持原位，不更新位置
+            EndGame(true, "All target exhibits reached their target positions!");
+            yield break;
         }
+       
+        isProcessingTurn = false;
     }
-
-    // 6. 推动烛台移动（如果有）
-    if (pushedCandleHolder != null)
-    {
-        Vector2Int candleHolderNewPos = pushedCandleHolder.GridPosition + playerDirection;
-        pushedCandleHolder.SetPosition(candleHolderNewPos);
-    }
-
-    // 7. 不再立即结束推动动画，等待下一行动开始时更新动画状态
-
-    // 8. 等待动画或效果时间（例如移动动画时长）
-    yield return new WaitForSeconds(0.1f);
-
-    // 9. 检查游戏结束条件
-    if (currentTurn == maxTurns)
-    {
-        if (CheckWinCondition())
-        {
-            EndGame(true, "All exhibits returned to original positions!");
-        }
-        else
-        {
-            EndGame(false, "Time's up!");
-        }
-    }
-
-    if (CheckAllTargetsReached())
-    {
-        EndGame(true, "All target exhibits reached their target positions!");
-        yield break;
-    }
-
-    Debug.Log("Turn: " + currentTurn + "/" + maxTurns);
-
-    player.PrintAnimationState();
-
-    
-    isProcessingTurn = false;
-}
-
     
     private bool CheckAllTargetsReached()
     {

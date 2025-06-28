@@ -1399,7 +1399,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: FacingLeft
+    m_ConditionEvent: FacingRight
     m_EventTreshold: 0
   - m_ConditionMode: 1
     m_ConditionEvent: IsPushing
