@@ -1,41 +1,69 @@
 using UnityEngine;
-using UnityEngine.Video;
+using UnityEngine.UI;
+using System.Collections.Generic;
+using System.Linq;
 
-public class VideoLoopReverse : MonoBehaviour
+public class FolderFramePlayer : MonoBehaviour
 {
-    public VideoPlayer videoPlayer;
+    public string resourcesFolderPath = "VideoFrames"; // 放在 Resources/VideoFrames/
+    public Image targetImage;        // 用于播放序列的UI Image
+    public float frameRate = 10f;
 
+    private Sprite[] frames;
+    private int currentFrame = 0;
     private bool isReversing = false;
+    private float timer = 0f;
 
     void Start()
     {
-        if (videoPlayer == null)
-            videoPlayer = GetComponent<VideoPlayer>();
+        LoadFrames();
+    }
 
-        videoPlayer.playOnAwake = false;
-        videoPlayer.isLooping = false;
-        videoPlayer.Play();
+    void LoadFrames()
+    {
+        frames = Resources.LoadAll<Sprite>(resourcesFolderPath);
+
+        // 排序（按名字中的数字排序）
+        frames = frames.OrderBy(s => ExtractNumber(s.name)).ToArray();
+    }
+
+    int ExtractNumber(string name)
+    {
+        string digits = new string(name.Where(char.IsDigit).ToArray());
+        int.TryParse(digits, out int number);
+        return number;
     }
 
     void Update()
     {
-        if (!videoPlayer.isPlaying)
+        if (frames == null || frames.Length == 0 || targetImage == null)
+            return;
+
+        timer += Time.deltaTime;
+        if (timer >= 1f / frameRate)
         {
+            timer -= 1f / frameRate;
+
+            if (frames[currentFrame] != null)
+                targetImage.sprite = frames[currentFrame];
+
             if (!isReversing)
             {
-                // 到正播末尾，开始倒放
-                isReversing = true;
-                videoPlayer.playbackSpeed = -1f;
-                videoPlayer.frame = (long)videoPlayer.frameCount - 1;
-                videoPlayer.Play();
+                currentFrame++;
+                if (currentFrame >= frames.Length)
+                {
+                    currentFrame = frames.Length - 1;
+                    isReversing = true;
+                }
             }
             else
             {
-                // 到倒放开头，重新正放
-                isReversing = false;
-                videoPlayer.playbackSpeed = 1f;
-                videoPlayer.frame = 0;
-                videoPlayer.Play();
+                currentFrame--;
+                if (currentFrame < 0)
+                {
+                    currentFrame = 0;
+                    isReversing = false;
+                }
             }
         }
     }
