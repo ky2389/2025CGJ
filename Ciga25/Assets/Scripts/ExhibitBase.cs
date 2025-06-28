@@ -8,6 +8,10 @@ public abstract class ExhibitBase : MonoBehaviour
     [Header("Initial Position Marker")]
     [SerializeField] protected Sprite signSprite; // Sprite for marking initial position
     
+    [Header("Movement Arrow")]
+    [SerializeField] protected GameObject movementArrow; // Arrow showing next move direction
+    [SerializeField] protected float flickerSpeed = 5f; // Speed of alpha flickering
+    
     protected Vector2Int gridPosition;
     protected SpriteRenderer spriteRenderer;
     protected int patternStep = 0; // Current step in movement pattern
@@ -19,6 +23,8 @@ public abstract class ExhibitBase : MonoBehaviour
     private float animationTimer = 0f;
     private bool isFrame1 = true;
     private GameObject signMarker; // Reference to the sign marker GameObject
+    private SpriteRenderer arrowSpriteRenderer; // Reference to arrow's sprite renderer
+    private float flickerTimer = 0f; // Timer for flickering effect
 
     protected virtual void Update()
     {
@@ -30,7 +36,26 @@ public abstract class ExhibitBase : MonoBehaviour
             isFrame1 = !isFrame1;
             spriteRenderer.sprite = isFrame1 ? frame1 : frame2;
         }
+        
+        // Handle arrow flickering
+        UpdateArrowFlickering();
     }
+    
+    // Update arrow flickering effect
+    private void UpdateArrowFlickering()
+    {
+        if (movementArrow != null && movementArrow.activeInHierarchy && arrowSpriteRenderer != null)
+        {
+            flickerTimer += Time.deltaTime * flickerSpeed;
+            
+            // Create a sine wave flickering effect (0.3 to 1.0 alpha)
+            float alpha = 0.3f + (0.7f * (Mathf.Sin(flickerTimer) + 1f) / 2f);
+            
+            Color currentColor = arrowSpriteRenderer.color;
+            arrowSpriteRenderer.color = new Color(currentColor.r, currentColor.g, currentColor.b, alpha);
+        }
+    }
+
     protected virtual void Awake()
     {
         // Get the sprite renderer component (user will add it manually)
@@ -38,6 +63,16 @@ public abstract class ExhibitBase : MonoBehaviour
         if (spriteRenderer == null)
         {
             Debug.LogError("SpriteRenderer component not found on exhibit! Please add it manually.");
+        }
+        
+        // Get the arrow sprite renderer reference
+        if (movementArrow != null)
+        {
+            arrowSpriteRenderer = movementArrow.GetComponent<SpriteRenderer>();
+            if (arrowSpriteRenderer == null)
+            {
+                Debug.LogWarning("SpriteRenderer component not found on movement arrow!");
+            }
         }
         
         // Scale to fit tile size (32x32 sprites need to be 100x larger)
@@ -159,6 +194,66 @@ public abstract class ExhibitBase : MonoBehaviour
     
     // Advance to next step in movement pattern
     protected abstract void AdvancePattern();
+    
+    // Update the movement arrow to show next move direction
+    public virtual void UpdateMovementArrow()
+    {
+        if (movementArrow == null) return;
+        
+        Vector2Int nextPos = GetNextPosition();
+        
+        // Only show arrow if the exhibit can actually move
+        if (CanMoveToPosition(nextPos))
+        {
+            movementArrow.SetActive(true);
+            
+            // Calculate direction
+            Vector2Int direction = nextPos - gridPosition;
+            
+            // Position arrow based on direction
+            Vector3 arrowPosition = Vector3.zero;
+            float arrowRotation = 0f;
+            
+            if (direction == Vector2Int.up)
+            {
+                arrowPosition = new Vector3(0f, 20f, 0f);
+                arrowRotation = 0f; // Point up (prefab is already -90° rotated)
+            }
+            else if (direction == Vector2Int.down)
+            {
+                arrowPosition = new Vector3(0f, -20f, 0f);
+                arrowRotation = 180f; // Point down
+            }
+            else if (direction == Vector2Int.left)
+            {
+                arrowPosition = new Vector3(-14.2f, 0.8f, 0f);
+                arrowRotation = 90f; // Point left
+            }
+            else if (direction == Vector2Int.right)
+            {
+                arrowPosition = new Vector3(14.2f, 0.8f, 0f);
+                arrowRotation = 270f; // Point right
+            }
+            
+            // Apply position and rotation
+            movementArrow.transform.localPosition = arrowPosition;
+            movementArrow.transform.localRotation = Quaternion.Euler(0f, 0f, arrowRotation);
+        }
+        else
+        {
+            // Hide arrow if blocked
+            movementArrow.SetActive(false);
+        }
+    }
+    
+    // Hide the movement arrow (called when exhibit is frozen or blocked)
+    public virtual void HideMovementArrow()
+    {
+        if (movementArrow != null)
+        {
+            movementArrow.SetActive(false);
+        }
+    }
     
     public Vector2Int GridPosition
     {
