@@ -342,6 +342,7 @@ MonoBehaviour:
   obstaclePositions:
   - {x: 2, y: 2}
   - {x: 4, y: 4}
+  candleHolderSpawnList: []
   candleHolderStartPosition: {x: 3, y: 4}
   exhibitSpawnList:
   - prefab: {fileID: 4595639466723028713, guid: bdddd5e8676dab04e947649ba4500f4b, type: 3}

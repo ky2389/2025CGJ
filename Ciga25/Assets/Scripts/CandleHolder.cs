@@ -8,10 +8,15 @@ public class CandleHolder : MonoBehaviour
     [SerializeField] private Color lightAreaColor = new Color(1f, 1f, 0.5f, 0.3f); // Semi-transparent yellow
     [SerializeField] private int lightRadius = 1; // Radius of lighting effect (1 = 3x3 area)
     
+    [Header("Flame Settings")]
+    [SerializeField] private int maxFlameTurns = 5; // Turns before flame goes out
+    [SerializeField] private Transform healthBar; // Reference to existing health bar child object
+    [SerializeField] private Transform displayGroup; // Reference to existing health bar child object
     private Vector2Int gridPosition;
     private SpriteRenderer spriteRenderer;
     private List<GameObject> lightAreaIndicators = new List<GameObject>();
     private bool isLit = true; // Whether the candle is currently lit
+    private int currentFlameTurns = 0; // Current turns the flame has been burning
     
     private void Awake()
     {
@@ -20,6 +25,13 @@ public class CandleHolder : MonoBehaviour
         if (spriteRenderer == null)
         {
             Debug.LogError("SpriteRenderer component not found on candle holder! Please add it manually.");
+        }
+        
+        // Add collider for mouse interaction if not present
+        if (GetComponent<Collider2D>() == null)
+        {
+            BoxCollider2D collider = gameObject.AddComponent<BoxCollider2D>();
+            collider.size = new Vector2(1f, 1f); // Adjust size as needed
         }
         
         // Scale to fit tile size (32x32 sprites need to be 100x larger)
@@ -34,6 +46,9 @@ public class CandleHolder : MonoBehaviour
         
         // Create light area indicators
         CreateLightAreaIndicators();
+        
+        // Initialize health bar
+        InitializeHealthBar();
     }
     
     private void CreateLightAreaIndicators()
@@ -203,6 +218,20 @@ public class CandleHolder : MonoBehaviour
         CreateLightAreaIndicators();
     }
     
+    // Set light radius
+    public void SetLightRadius(int radius)
+    {
+        lightRadius = radius;
+        CreateLightAreaIndicators();
+    }
+    
+    // Set light color
+    public void SetLightColor(Color color)
+    {
+        lightAreaColor = new Color(color.r, color.g, color.b, 0.3f); // Keep alpha at 0.3
+        CreateLightAreaIndicators();
+    }
+    
     public Vector2Int GridPosition
     {
         get { return gridPosition; }
@@ -216,5 +245,94 @@ public class CandleHolder : MonoBehaviour
     private void OnDestroy()
     {
         ClearLightAreaIndicators();
+    }
+    
+    // Called at the end of each turn to update flame
+    public void OnTurnEnd()
+    {
+        if (isLit)
+        {
+            currentFlameTurns++;
+            UpdateHealthBar();
+            
+            // Check if flame should go out
+            if (currentFlameTurns >= maxFlameTurns)
+            {
+                ExtinguishFlame();
+            }
+        }
+    }
+    
+    // Extinguish the flame
+    private void ExtinguishFlame()
+    {
+        isLit = false;
+        currentFlameTurns = maxFlameTurns;
+        ClearLightAreaIndicators();
+        UpdateHealthBar();
+        Debug.Log($"Candle holder at {gridPosition} flame went out!");
+    }
+    
+    // Relight the flame (called by player interaction)
+    public void RelightFlame()
+    {
+        isLit = true;
+        currentFlameTurns = 0;
+        CreateLightAreaIndicators();
+        UpdateHealthBar();
+        Debug.Log($"Candle holder at {gridPosition} flame relit!");
+    }
+    
+    // Initialize health bar display
+    private void InitializeHealthBar()
+    {
+        if (healthBar == null) return;
+        
+        // Set initial health bar to full
+        currentFlameTurns = 0;
+        UpdateHealthBar();
+        
+        // Debug.Log($"Initialized health bar for candle holder at {gridPosition}");
+    }
+    
+    // Update health bar display
+    private void UpdateHealthBar()
+    {
+        if (healthBar == null) return;
+        
+        // Calculate health percentage (0.0 to 1.0)
+        float healthPercentage = (float)(maxFlameTurns - currentFlameTurns) / maxFlameTurns;
+        
+        // Update the health bar scale based on remaining flame turns
+        // Scale the parent empty object
+        healthBar.transform.localScale = new Vector3(healthPercentage, 1, 1);
+        
+        // Fix the sprite position to keep it anchored properly
+        // The sprite should stay anchored to the left side as the parent scales
+        SpriteRenderer healthBarSprite = healthBar.GetComponentInChildren<SpriteRenderer>();
+        if (healthBarSprite != null)
+        {
+            // Get the sprite's bounds to calculate proper positioning
+            Bounds spriteBounds = healthBarSprite.bounds;
+            float spriteWidth = spriteBounds.size.x;
+            
+            // Calculate the offset needed to keep the sprite anchored to the left
+            // This compensates for the scaling effect
+            float offsetX = (spriteWidth * (1f - healthPercentage)) / 2f;
+            
+            // Apply the offset to keep the sprite anchored to the left
+            Vector3 spriteLocalPos = healthBarSprite.transform.localPosition;
+            healthBarSprite.transform.localPosition = new Vector3(-offsetX, spriteLocalPos.y, spriteLocalPos.z);
+        }
+        
+        // Optional: Hide health bar completely when flame is out
+        if (healthPercentage <= 0)
+        {
+            displayGroup.gameObject.SetActive(false);
+        }
+        else
+        {
+            displayGroup.gameObject.SetActive(true);
+        }
     }
 } 
