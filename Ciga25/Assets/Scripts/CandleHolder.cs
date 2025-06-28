@@ -12,6 +12,12 @@ public class CandleHolder : MonoBehaviour
     [SerializeField] private int maxFlameTurns = 5; // Turns before flame goes out
     [SerializeField] private Transform healthBar; // Reference to existing health bar child object
     [SerializeField] private Transform displayGroup; // Reference to existing health bar child object
+    
+    [Header("Sprite References")]
+    [SerializeField] private Sprite litSprite; // Sprite when candle is lit
+    [SerializeField] private Sprite extinguishedSprite; // Sprite when candle is extinguished
+    [SerializeField] private SpriteRenderer candleSpriteRenderer; // Reference to the child sprite object's SpriteRenderer
+    
     private Vector2Int gridPosition;
     private SpriteRenderer spriteRenderer;
     private List<GameObject> lightAreaIndicators = new List<GameObject>();
@@ -270,6 +276,13 @@ public class CandleHolder : MonoBehaviour
         currentFlameTurns = maxFlameTurns;
         ClearLightAreaIndicators();
         UpdateHealthBar();
+        
+        // Change to extinguished sprite
+        if (extinguishedSprite != null && candleSpriteRenderer != null)
+        {
+            candleSpriteRenderer.sprite = extinguishedSprite;
+        }
+        
         Debug.Log($"Candle holder at {gridPosition} flame went out!");
     }
     
@@ -280,6 +293,13 @@ public class CandleHolder : MonoBehaviour
         currentFlameTurns = 0;
         CreateLightAreaIndicators();
         UpdateHealthBar();
+        
+        // Change back to lit sprite
+        if (litSprite != null && candleSpriteRenderer != null)
+        {
+            candleSpriteRenderer.sprite = litSprite;
+        }
+        
         Debug.Log($"Candle holder at {gridPosition} flame relit!");
     }
     
@@ -292,7 +312,13 @@ public class CandleHolder : MonoBehaviour
         currentFlameTurns = 0;
         UpdateHealthBar();
         
-        // Debug.Log($"Initialized health bar for candle holder at {gridPosition}");
+        // Set initial lit sprite
+        if (litSprite != null && candleSpriteRenderer != null)
+        {
+            candleSpriteRenderer.sprite = litSprite;
+        }
+        
+        Debug.Log($"Initialized health bar for candle holder at {gridPosition}");
     }
     
     // Update health bar display
