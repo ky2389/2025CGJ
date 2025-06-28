@@ -12,7 +12,25 @@ public class GameManager : MonoBehaviour
     {
         public GameObject prefab;
         public Vector2Int spawnPosition;
-        public Vector2Int targetPosition;
+        [SerializeField] private Vector2Int _targetPosition;
+        
+        // Property that defaults target position to spawn position
+        public Vector2Int targetPosition
+        {
+            get
+            {
+                // If target position is zero (unset), return spawn position
+                if (_targetPosition == Vector2Int.zero)
+                {
+                    return spawnPosition;
+                }
+                return _targetPosition;
+            }
+            set
+            {
+                _targetPosition = value;
+            }
+        }
     }
 
     [System.Serializable]
@@ -434,6 +452,8 @@ public class GameManager : MonoBehaviour
                     intendedPos = exhibits[i].GridPosition;
                     canMove = false;
                     Debug.Log($"Exhibit at {exhibits[i].GridPosition} frozen by light");
+                    // Hide arrow for frozen exhibit
+                    exhibits[i].HideMovementArrow();
                 }
                 // 如果想移动的位置被玩家占据
                 else if (intendedPos == newPlayerPos)
@@ -488,6 +508,9 @@ public class GameManager : MonoBehaviour
                 // 受阻展品保持原位，不更新位置
             }
         }
+
+        // 5.5. 更新展品移动箭头（移动后）
+        UpdateExhibitMovementArrows();
 
         // 6. 推动烛台移动（如果有）
         if (pushedCandleHolder != null)
@@ -696,6 +719,15 @@ public class GameManager : MonoBehaviour
         foreach (CandleHolder candleHolder in candleHolders)
         {
             candleHolder.OnTurnEnd();
+        }
+    }
+    
+    // Update all exhibit movement arrows at the end of each turn
+    private void UpdateExhibitMovementArrows()
+    {
+        foreach (ExhibitBase exhibit in exhibits)
+        {
+            exhibit.UpdateMovementArrow();
         }
     }
 
