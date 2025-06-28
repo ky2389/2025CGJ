@@ -12,7 +12,25 @@ public class GameManager : MonoBehaviour
     {
         public GameObject prefab;
         public Vector2Int spawnPosition;
-        public Vector2Int targetPosition;
+        [SerializeField] private Vector2Int _targetPosition;
+        
+        // Property that defaults target position to spawn position
+        public Vector2Int targetPosition
+        {
+            get
+            {
+                // If target position is zero (unset), return spawn position
+                if (_targetPosition == Vector2Int.zero)
+                {
+                    return spawnPosition;
+                }
+                return _targetPosition;
+            }
+            set
+            {
+                _targetPosition = value;
+            }
+        }
     }
 
     [System.Serializable]
@@ -62,8 +80,6 @@ public class GameManager : MonoBehaviour
     
     [Header("Candle Holder Settings")]
     [SerializeField] private List<CandleHolderSpawnData> candleHolderSpawnList;
-    // Legacy single position (kept for backward compatibility)
-    [SerializeField] private Vector2Int candleHolderStartPosition = new Vector2Int(4, 4);
     
     [Header("Exhibit Target Settings")]
     [SerializeField] private List<ExhibitSpawnData> exhibitSpawnList;
@@ -79,6 +95,7 @@ public class GameManager : MonoBehaviour
     private bool gameEnded = false;
     private bool isProcessingTurn = false;
     private bool isRelightModeActive = false; // Whether relight mode is active
+    private bool isArrowKeyPressed = false; // Whether R key is pressed for showing arrows
     
     // Grid and entities
     private GridManager gridManager;
@@ -115,8 +132,16 @@ public class GameManager : MonoBehaviour
     
     private void Update()
     {
-        // Handle mouse input for relighting candle holders
+        if (gameEnded || isProcessingTurn) return;
+        
+        // Handle player movement input
+        player.HandleInput();
+        
+        // Handle relight input
         HandleRelightInput();
+        
+        // Handle arrow visibility input
+        HandleArrowVisibilityInput();
     }
     
     private void InitializeGame()
@@ -133,6 +158,9 @@ public class GameManager : MonoBehaviour
         // Store initial positions for win condition
         StoreInitialPositions();
         CreateExhibitTargets();
+        
+        // Initialize arrows as hidden
+        UpdateExhibitMovementArrows();
         
         Debug.Log("Game initialized! Use WASD to move. Turn: " + currentTurn + "/" + maxTurns);
     }
@@ -253,14 +281,14 @@ public class GameManager : MonoBehaviour
     {
         if (candleHolderPrefab == null) return;
         
-        // Use spawn list if available, otherwise fall back to single position
+        // Use spawn list if available, otherwise don't create any candle holders
         if (candleHolderSpawnList != null && candleHolderSpawnList.Count > 0)
         {
             CreateCandleHoldersFromSpawnList();
         }
         else
         {
-            CreateSingleCandleHolder();
+            Debug.Log("No candle holders configured in spawn list - skipping candle holder creation");
         }
     }
     
@@ -288,25 +316,6 @@ public class GameManager : MonoBehaviour
             {
                 Debug.LogWarning($"Cannot place candle holder at {data.spawnPosition} - position invalid or occupied");
             }
-        }
-    }
-    
-    private void CreateSingleCandleHolder()
-    {
-        // Legacy method for backward compatibility
-        if (IsValidCandleHolderPosition(candleHolderStartPosition))
-        {
-            Vector3 worldPos = gridManager.GridToWorldPosition(candleHolderStartPosition);
-            GameObject candleHolderObj = Instantiate(candleHolderPrefab, worldPos, Quaternion.identity);
-            CandleHolder candleHolder = candleHolderObj.GetComponent<CandleHolder>();
-            candleHolder.Initialize(candleHolderStartPosition);
-            candleHolders.Add(candleHolder);
-            
-            Debug.Log($"[CreateCandleHolders] Spawned single candle holder at {candleHolderStartPosition}");
-        }
-        else
-        {
-            Debug.LogWarning($"Cannot place candle holder at {candleHolderStartPosition} - position invalid or occupied");
         }
     }
     
@@ -455,6 +464,8 @@ public class GameManager : MonoBehaviour
                     intendedPos = exhibits[i].GridPosition;
                     canMove = false;
                     Debug.Log($"Exhibit at {exhibits[i].GridPosition} frozen by light");
+                    // Hide arrow for frozen exhibit
+                    exhibits[i].HideMovementArrow();
                 }
                 // 如果想移动的位置被玩家占据
                 else if (intendedPos == newPlayerPos)
@@ -509,6 +520,9 @@ public class GameManager : MonoBehaviour
                 // 受阻展品保持原位，不更新位置
             }
         }
+
+        // 5.5. 更新展品移动箭头（移动后）
+        UpdateExhibitMovementArrows();
 
         // 6. 推动烛台移动（如果有）
         if (pushedCandleHolder != null)
@@ -719,6 +733,22 @@ public class GameManager : MonoBehaviour
             candleHolder.OnTurnEnd();
         }
     }
+    
+    // Update all exhibit movement arrows at the end of each turn
+    private void UpdateExhibitMovementArrows()
+    {
+        foreach (ExhibitBase exhibit in exhibits)
+        {
+            if (isArrowKeyPressed)
+            {
+                exhibit.UpdateMovementArrow();
+            }
+            else
+            {
+                exhibit.HideMovementArrow();
+            }
+        }
+    }
 
     private void SetupRelightButton()
     {
@@ -780,5 +810,18 @@ public class GameManager : MonoBehaviour
             }
         }
         
+    }
+
+    // Handle arrow visibility input (R key)
+    private void HandleArrowVisibilityInput()
+    {
+        bool rKeyPressed = Input.GetKey(KeyCode.R);
+        
+        // Only update if the state changed
+        if (rKeyPressed != isArrowKeyPressed)
+        {
+            isArrowKeyPressed = rKeyPressed;
+            UpdateExhibitMovementArrows();
+        }
     }
 }
