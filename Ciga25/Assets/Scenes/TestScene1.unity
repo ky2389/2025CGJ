@@ -163,7 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5405567e3d1e0384b8bdf995e0a7f3de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxTurns: 20
+  maxTurns: 100
   playerStartPosition: {x: 5, y: 4}
   horizontalExhibitStartPosition: {x: 2, y: 2}
   circularExhibitStartPosition: {x: 6, y: 6}

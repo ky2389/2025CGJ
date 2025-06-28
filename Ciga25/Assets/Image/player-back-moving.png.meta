@@ -172,7 +172,9 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      player-back-moving_0: -6292067551425753795
+      player-back-moving_1: -1090047293099536534
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
