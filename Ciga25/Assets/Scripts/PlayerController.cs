@@ -50,7 +50,7 @@ public class PlayerController : MonoBehaviour
         ApplyCachedAnimationState();
     }
 
-    private void HandleInput()
+    public void HandleInput()
     {
         if (GameManager.Instance.IsGameEnded()) return;
 
