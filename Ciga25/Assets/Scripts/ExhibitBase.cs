@@ -163,6 +163,36 @@ public abstract class ExhibitBase : MonoBehaviour
         return true;
     }
     
+    // Check if the exhibit can move to the given position (for arrow display - ignores player)
+    protected virtual bool CanMoveToPositionForArrow(Vector2Int position)
+    {
+        // Check if position is walkable (within bounds and not blocked by obstacle)
+        if (!GridManager.Instance.IsWalkablePosition(position))
+        {
+            return false;
+        }
+        
+        // Check if position is occupied by another entity (excluding player)
+        if (GameManager.Instance != null)
+        {
+            // Check if any exhibit is at this position
+            if (GameManager.Instance.IsExhibitAtPosition(position))
+            {
+                return false;
+            }
+            
+            // Check if any candle holder is at this position
+            if (GameManager.Instance.IsCandleHolderAtPosition(position))
+            {
+                return false;
+            }
+            
+            // Note: We don't check for player position since player will move next turn
+        }
+        
+        return true;
+    }
+    
     // Set position directly (for when pushed by player)
     public virtual void SetPosition(Vector2Int newPosition)
     {
@@ -202,8 +232,8 @@ public abstract class ExhibitBase : MonoBehaviour
         
         Vector2Int nextPos = GetNextPosition();
         
-        // Only show arrow if the exhibit can actually move
-        if (CanMoveToPosition(nextPos))
+        // Only show arrow if the exhibit can actually move (ignoring player position)
+        if (CanMoveToPositionForArrow(nextPos))
         {
             movementArrow.SetActive(true);
             
