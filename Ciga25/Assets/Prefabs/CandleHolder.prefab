@@ -45,8 +45,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e50581585c6918743838aec73daeb27b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  candleColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
-  lightAreaColor: {r: 0.81671154, g: 0.81671154, b: 0.45678604, a: 0.3}
+  candleColor: {r: 1, g: 1, b: 1, a: 1}
+  lightAreaColor: {r: 1, g: 1, b: 0.58679235, a: 0.3}
   lightRadius: 1
 --- !u!212 &-4923304572624311689
 SpriteRenderer:
