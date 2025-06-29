@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
+
 [System.Serializable]
 public class DialogueLine
 {
@@ -20,11 +22,13 @@ public class ImageDialogueData
 
 public class ImageTextSequencePlayer : MonoBehaviour
 {
+    [Header("Scene Management")]
+    [SerializeField] private string nextSceneName = "Tutorial1";
+    
     [Header("UI References")]
     public Image backgroundImage;
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI dialogueText;
-
     [Header("Dialogue Data")]
     public List<ImageDialogueData> sequenceData;
 
@@ -79,7 +83,7 @@ public class ImageTextSequencePlayer : MonoBehaviour
             }
             else
             {
-                SceneManager.Instance.LoadScene("Tutorial1");
+                UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneName);
             }
         }
     }

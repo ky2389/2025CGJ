@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -66,6 +67,11 @@ public class GameManager : MonoBehaviour
     
     [Header("Game Settings")]
     [SerializeField] private int maxTurns = 20;
+    [SerializeField] private int maxRelightUses = 3; // Maximum number of relight uses allowed
+    [SerializeField] private string nextSceneName;
+    [SerializeField] private SceneManager sceneManager;
+    [SerializeField] private RectTransform gameOverPanelTime;
+    [SerializeField] private RectTransform gameOverPanelCrush;
     
     [Header("Player Settings")]
     [SerializeField] private Vector2Int playerStartPosition = new Vector2Int(5, 4); // Center of 9x9 grid
@@ -89,7 +95,11 @@ public class GameManager : MonoBehaviour
     
     [Header("UI Settings")]
     [SerializeField] private UnityEngine.UI.Button relightButton; // Button to activate relight mode
+    [SerializeField] private UnityEngine.UI.Button restartButton; // Button to restart the current level
+    [SerializeField] private UnityEngine.UI.Button restartButtonTime; // Restart button on time game over panel
+    [SerializeField] private UnityEngine.UI.Button restartButtonCrush; // Restart button on crush game over panel
     [SerializeField] private Camera gameCamera; // Reference to the game camera for mouse input
+    [SerializeField] private TMPro.TextMeshProUGUI relightUsesText; // Text to display remaining relight uses
     [SerializeField] private TMPro.TextMeshProUGUI turnText; // Text to display current turn and max turns
     
     // Game state
@@ -98,6 +108,9 @@ public class GameManager : MonoBehaviour
     private bool isProcessingTurn = false;
     private bool isRelightModeActive = false; // Whether relight mode is active
     private bool isArrowKeyPressed = false; // Whether R key is pressed for showing arrows
+    
+    // Relight system
+    private int relightUsesRemaining; // Number of relight uses remaining
     
     // Grid and entities
     private GridManager gridManager;
@@ -112,24 +125,31 @@ public class GameManager : MonoBehaviour
         get { return player; }
     }
     
-    private void Awake()
+    // Public property for accessing relight uses
+    public int RelightUsesRemaining
     {
-        // Singleton pattern
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        get { return relightUsesRemaining; }
     }
+    
     
     private void Start()
     {
+        // Set the static reference for this scene
+        Instance = this;
+        
         InitializeGame();
         SetupRelightButton();
+        SetupRestartButton();
+        SetupGameOverRestartButtons();
+    }
+    
+    private void OnDestroy()
+    {
+        // Clear the static reference when this GameManager is destroyed
+        if (Instance == this)
+        {
+            Instance = null;
+        }
     }
     
     private void Update()
@@ -151,6 +171,9 @@ public class GameManager : MonoBehaviour
         // Get grid manager
         gridManager = GridManager.Instance;
         
+        // Initialize relight uses
+        relightUsesRemaining = maxRelightUses;
+        
         // Create entities
         CreatePlayer();
         CreateExhibits();
@@ -166,6 +189,7 @@ public class GameManager : MonoBehaviour
         
         // Update UI
         UpdateTurnDisplay();
+        UpdateRelightUsesUI();
         
         Debug.Log("Game initialized! Use WASD to move. Turn: " + currentTurn + "/" + maxTurns);
     }
@@ -180,35 +204,6 @@ public class GameManager : MonoBehaviour
         player.Initialize(playerStartPosition);
     }
     
-    // private void CreateExhibits()
-    // {
-    //     foreach (var data in exhibitSpawnList)
-    //     {
-    //         GameObject prefab = null;
-    //
-    //         if (data.prefab == null)
-    //         {
-    //             Debug.LogWarning("Exhibit prefab is missing in spawn data");
-    //             continue;
-    //         }
-    //
-    //         
-    //         if (prefab != null)
-    //         {
-    //             Vector3 worldPos = gridManager.GridToWorldPosition(data.spawnPosition);
-    //             GameObject obj = Instantiate(prefab, worldPos, Quaternion.identity);
-    //             ExhibitBase exhibit = obj.GetComponent<ExhibitBase>();
-    //             exhibit.Initialize(data.spawnPosition);
-    //             exhibits.Add(exhibit);
-    //
-    //             // 保存 exhibit 到目标位置的映射（用于判定是否成功）
-    //             exhibitTargetPairs.Add(new ExhibitTargetPair
-    //             {
-    //                 exhibit = exhibit,
-    //                 targetPosition = data.targetPosition
-    //             });
-    //         }
-    //     }
     private void CreateExhibits()
     {
         foreach (var data in exhibitSpawnList)
@@ -222,7 +217,7 @@ public class GameManager : MonoBehaviour
             Vector3 worldPos = gridManager.GridToWorldPosition(data.spawnPosition);
             GameObject obj = Instantiate(data.prefab, worldPos, Quaternion.identity);
             ExhibitBase exhibit = obj.GetComponent<ExhibitBase>();
-            exhibit.Initialize(data.spawnPosition);
+            exhibit.Initialize(data.spawnPosition, data.targetPosition);
             exhibits.Add(exhibit);
 
             exhibitTargetPairs.Add(new ExhibitTargetPair
@@ -231,7 +226,7 @@ public class GameManager : MonoBehaviour
                 targetPosition = data.targetPosition
             });
 
-            Debug.Log($"[CreateExhibits] Spawned exhibit at {data.spawnPosition} using {data.prefab.name}");
+            Debug.Log($"[CreateExhibits] Spawned exhibit at {data.spawnPosition} with target at {data.targetPosition} using {data.prefab.name}");
         }
     }
     
@@ -499,8 +494,18 @@ public class GameManager : MonoBehaviour
             exhibitCanMove.Add(canMove);
         }
 
-        // 3. 检查展品间是否有碰撞
-        if (CheckExhibitCollisions(exhibitNewPositions))
+        // 3. 检查展品间是否有碰撞 - only check exhibits that can actually move
+        List<Vector2Int> actualMovingPositions = new List<Vector2Int>();
+        for (int i = 0; i < exhibits.Count; i++)
+        {
+            if (exhibits[i] == pushedExhibit || exhibitCanMove[i])
+            {
+                // Only add positions of exhibits that will actually move
+                actualMovingPositions.Add(exhibitNewPositions[i]);
+            }
+        }
+        
+        if (CheckExhibitCollisions(actualMovingPositions))
         {
             EndGame(false, "Exhibits collided!");
             yield break;
@@ -695,10 +700,25 @@ public class GameManager : MonoBehaviour
         if (won)
         {
             Debug.Log("Congratulations! You restored the museum!");
+            sceneManager.LoadScene(nextSceneName);
         }
         else
         {
             Debug.Log("The museum remains in chaos...");
+            
+            // Show appropriate game over panel based on failure type
+            if (message.Contains("Time's up"))
+            {
+                // Time-based failure
+                gameOverPanelTime.gameObject.SetActive(true);
+                gameOverPanelCrush.gameObject.SetActive(false);
+            }
+            else
+            {
+                // Collision-based failure (exhibits collided, etc.)
+                gameOverPanelCrush.gameObject.SetActive(true);
+                gameOverPanelTime.gameObject.SetActive(false);
+            }
         }
     }
     
@@ -764,15 +784,25 @@ public class GameManager : MonoBehaviour
         {
             relightButton.onClick.AddListener(ToggleRelightMode);
         }
+        
+        // Initialize the relight uses UI
+        UpdateRelightUsesUI();
     }
     
     private void ToggleRelightMode()
     {
+        // Check if we have any relight uses remaining
+        if (relightUsesRemaining <= 0)
+        {
+            Debug.Log("No relight uses remaining!");
+            return;
+        }
+        
         isRelightModeActive = !isRelightModeActive;
         
         if (isRelightModeActive)
         {
-            Debug.Log("Relight mode activated. Click on a candle holder to relight it.");
+            Debug.Log($"Relight mode activated. Click on a candle holder to relight it. Uses remaining: {relightUsesRemaining}");
             // You can add visual feedback here (change button color, show cursor, etc.)
         }
         else
@@ -798,12 +828,26 @@ public class GameManager : MonoBehaviour
                 CandleHolder clickedCandleHolder = hit.collider.GetComponent<CandleHolder>();
                 if (clickedCandleHolder != null)
                 {
-                    // Relight the candle holder
-                    clickedCandleHolder.RelightFlame();
-                    
-                    // Deactivate relight mode
-                    isRelightModeActive = false;
-                    Debug.Log("Candle holder relit! Relight mode deactivated.");
+                    // Check if the candle holder is actually unlit (needs relighting)
+                    if (!clickedCandleHolder.IsLit)
+                    {
+                        // Relight the candle holder
+                        clickedCandleHolder.RelightFlame();
+                        
+                        // Decrease relight uses only on successful relight
+                        relightUsesRemaining--;
+                        UpdateRelightUsesUI();
+                        
+                        // Deactivate relight mode
+                        isRelightModeActive = false;
+                        Debug.Log($"Candle holder relit! Relight mode deactivated. Uses remaining: {relightUsesRemaining}");
+                    }
+                    else
+                    {
+                        // Candle holder is already lit, don't count as a use
+                        isRelightModeActive = false;
+                        Debug.Log("Candle holder is already lit. Relight mode deactivated.");
+                    }
                 }
                 else
                 {
@@ -837,7 +881,114 @@ public class GameManager : MonoBehaviour
     {
         if (turnText != null)
         {
-            turnText.text = $"回合: {currentTurn}/{maxTurns}";
+            turnText.text = $"Turn: {currentTurn}/{maxTurns}";
+        }
+    }
+
+    private void SetupRestartButton()
+    {
+        if (restartButton != null)
+        {
+            restartButton.onClick.AddListener(RestartLevel);
+        }
+    }
+
+    private void RestartLevel()
+    {
+        Debug.Log("Restarting current level...");
+        
+        // Hide game over panels
+        if (gameOverPanelTime != null)
+        {
+            gameOverPanelTime.gameObject.SetActive(false);
+        }
+        if (gameOverPanelCrush != null)
+        {
+            gameOverPanelCrush.gameObject.SetActive(false);
+        }
+        
+        // Stop any ongoing coroutines
+        StopAllCoroutines();
+        
+        // Reset game state
+        currentTurn = 0;
+        gameEnded = false;
+        isProcessingTurn = false;
+        isRelightModeActive = false;
+        isArrowKeyPressed = false;
+        
+        // Reset relight uses
+        relightUsesRemaining = maxRelightUses;
+        
+        // Clear all existing entities
+        ClearAllEntities();
+        
+        // Reinitialize the game
+        InitializeGame();
+        
+        // Update UI
+        UpdateRelightUsesUI();
+        
+        Debug.Log("Level restarted! Turn: " + currentTurn + "/" + maxTurns);
+    }
+
+    private void ClearAllEntities()
+    {
+        // Clear player
+        if (player != null)
+        {
+            Destroy(player.gameObject);
+            player = null;
+        }
+        
+        // Clear exhibits
+        foreach (ExhibitBase exhibit in exhibits)
+        {
+            if (exhibit != null)
+            {
+                Destroy(exhibit.gameObject);
+            }
+        }
+        exhibits.Clear();
+        exhibitTargetPairs.Clear();
+        
+        // Clear candle holders
+        foreach (CandleHolder candleHolder in candleHolders)
+        {
+            if (candleHolder != null)
+            {
+                Destroy(candleHolder.gameObject);
+            }
+        }
+        candleHolders.Clear();
+        
+        // Clear exhibit start positions
+        exhibitStartPositions.Clear();
+    }
+
+    private void UpdateRelightUsesUI()
+    {
+        if (relightUsesText != null)
+        {
+            relightUsesText.text = $"{relightUsesRemaining}/{maxRelightUses}";
+        }
+        
+        // Update button interactability based on remaining uses
+        if (relightButton != null)
+        {
+            relightButton.interactable = relightUsesRemaining > 0;
+        }
+    }
+
+    private void SetupGameOverRestartButtons()
+    {
+        if (restartButtonTime != null)
+        {
+            restartButtonTime.onClick.AddListener(RestartLevel);
+        }
+        if (restartButtonCrush != null)
+        {
+            restartButtonCrush.onClick.AddListener(RestartLevel);
         }
     }
 }
