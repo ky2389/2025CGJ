@@ -3,16 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.SceneManagement;
-
 [System.Serializable]
 public class DialogueLine
 {
     public string speakerName;
     [TextArea(2, 5)]
     public string text;
-
-    
 }
 
 [System.Serializable]
@@ -24,7 +20,6 @@ public class ImageDialogueData
 
 public class ImageTextSequencePlayer : MonoBehaviour
 {
-    
     [Header("UI References")]
     public Image backgroundImage;
     public TextMeshProUGUI nameText;
@@ -41,7 +36,7 @@ public class ImageTextSequencePlayer : MonoBehaviour
     private int currentDialogueIndex = 0;
     private bool isTyping = false;
     private Coroutine typingCoroutine;
-    public GameObject sceneManager;
+
     void Start()
     {
         ShowCurrentDialogue();
@@ -84,7 +79,7 @@ public class ImageTextSequencePlayer : MonoBehaviour
             }
             else
             {
-                sceneManager.SetActive(true);
+                EndSequence();
             }
         }
     }
@@ -134,12 +129,11 @@ public class ImageTextSequencePlayer : MonoBehaviour
     }
 
 
-    // void EndSequence()
-    // {
-    //     dialogueText.text = "";
-    //     nameText.text = "";
-    //     backgroundImage.enabled = false;
-    //     Debug.Log("Dialogue sequence complete.");
-    //     sceneManager.SetActive(true);
-    // }
+    void EndSequence()
+    {
+        dialogueText.text = "";
+        nameText.text = "";
+        backgroundImage.enabled = false;
+        Debug.Log("Dialogue sequence complete.");
+    }
 }
