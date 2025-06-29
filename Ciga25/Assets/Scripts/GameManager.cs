@@ -452,41 +452,19 @@ public class GameManager : MonoBehaviour
 
             if (exhibits[i] == pushedExhibit)
             {
+                // 被推动的展品直接跟随玩家方向移动
                 intendedPos = exhibits[i].GridPosition + playerDirection;
             }
             else
             {
+                // 普通展品按照自己的移动模式计算目标位置
                 intendedPos = exhibits[i].GetNextPosition();
 
-                // 检查展品是否被烛光冻结
-                if (IsExhibitInLightArea(exhibits[i].GridPosition))
+                // 检查各种阻挡情况
+                if (IsExhibitBlocked(exhibits[i], intendedPos, newPlayerPos, pushedExhibit, pushedCandleHolder))
                 {
                     intendedPos = exhibits[i].GridPosition;
                     canMove = false;
-                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} frozen by light");
-                    // Hide arrow for frozen exhibit
-                    exhibits[i].HideMovementArrow();
-                }
-                // 如果想移动的位置被玩家占据
-                else if (intendedPos == newPlayerPos)
-                {
-                    intendedPos = exhibits[i].GridPosition;
-                    canMove = false;
-                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by player moving to {newPlayerPos}");
-                }
-                // 被推动展品阻挡
-                else if (pushedExhibit != null && intendedPos == pushedExhibit.GridPosition + playerDirection)
-                {
-                    intendedPos = exhibits[i].GridPosition;
-                    canMove = false;
-                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed exhibit moving to {pushedExhibit.GridPosition + playerDirection}");
-                }
-                // 被推动烛台阻挡
-                else if (pushedCandleHolder != null && intendedPos == pushedCandleHolder.GridPosition + playerDirection)
-                {
-                    intendedPos = exhibits[i].GridPosition;
-                    canMove = false;
-                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed candle holder moving to {pushedCandleHolder.GridPosition + playerDirection}");
                 }
             }
 
@@ -513,7 +491,9 @@ public class GameManager : MonoBehaviour
             }
             else if (exhibitCanMove[i])
             {
-                exhibits[i].MoveToNextPosition();
+                // 检查是否需要强制移动（当目标位置有被阻挡的展品时）
+                bool forceMove = ShouldForceMove(exhibitNewPositions[i], newPlayerPos, playerDirection, pushedExhibit, pushedCandleHolder);
+                exhibits[i].MoveToNextPosition(forceMove);
             }
             else
             {
@@ -823,5 +803,104 @@ public class GameManager : MonoBehaviour
             isArrowKeyPressed = rKeyPressed;
             UpdateExhibitMovementArrows();
         }
+    }
+
+    private bool IsExhibitBlocked(ExhibitBase exhibit, Vector2Int intendedPos, Vector2Int newPlayerPos, ExhibitBase pushedExhibit, CandleHolder pushedCandleHolder)
+    {
+        Vector2Int playerDirection = newPlayerPos - exhibit.GridPosition;
+        
+        // 1. 检查展品是否被烛光冻结
+        if (IsExhibitInLightArea(exhibit.GridPosition))
+        {
+            Debug.Log($"Exhibit at {exhibit.GridPosition} frozen by light");
+            exhibit.HideMovementArrow();
+            return true;
+        }
+        
+        // 2. 检查目标位置是否被玩家占据
+        if (intendedPos == newPlayerPos)
+        {
+            Debug.Log($"Exhibit at {exhibit.GridPosition} blocked by player moving to {newPlayerPos}");
+            return true;
+        }
+        
+        // 3. 检查目标位置是否被推动的烛台占据
+        if (pushedCandleHolder != null && intendedPos == pushedCandleHolder.GridPosition + playerDirection)
+        {
+            Debug.Log($"Exhibit at {exhibit.GridPosition} blocked by pushed candle holder moving to {pushedCandleHolder.GridPosition + playerDirection}");
+            return true;
+        }
+        
+        // 4. 检查目标位置是否被其他展品占据
+        if (IsExhibitAtPosition(intendedPos))
+        {
+            ExhibitBase targetExhibit = GetExhibitAtPosition(intendedPos);
+            if (targetExhibit != null)
+            {
+                Vector2Int targetExhibitIntendedPos = targetExhibit.GetNextPosition();
+                bool targetExhibitCanMove = true;
+                
+                // 检查目标展品是否被阻挡
+                if (IsExhibitInLightArea(targetExhibit.GridPosition))
+                {
+                    targetExhibitCanMove = false;
+                }
+                else if (targetExhibitIntendedPos == newPlayerPos)
+                {
+                    targetExhibitCanMove = false;
+                }
+                else if (pushedCandleHolder != null && targetExhibitIntendedPos == pushedCandleHolder.GridPosition + playerDirection)
+                {
+                    targetExhibitCanMove = false;
+                }
+                
+                // 如果目标展品被阻挡，允许当前展品移动到其位置（将导致碰撞）
+                if (!targetExhibitCanMove)
+                {
+                    Debug.Log($"Exhibit at {exhibit.GridPosition} will collide with blocked exhibit at {intendedPos}");
+                    return false; // 允许移动，将导致碰撞
+                }
+                else
+                {
+                    // 目标展品可以移动，也允许当前展品移动（将导致碰撞）
+                    Debug.Log($"Exhibit at {exhibit.GridPosition} will collide with moving exhibit at {intendedPos}");
+                    return false; // 允许移动，将导致碰撞
+                }
+            }
+        }
+        
+        return false; // 没有被阻挡
+    }
+
+    private bool ShouldForceMove(Vector2Int intendedPos, Vector2Int newPlayerPos, Vector2Int playerDirection, ExhibitBase pushedExhibit, CandleHolder pushedCandleHolder)
+    {
+        // 检查目标位置是否被其他展品占据
+        if (IsExhibitAtPosition(intendedPos))
+        {
+            ExhibitBase targetExhibit = GetExhibitAtPosition(intendedPos);
+            if (targetExhibit != null)
+            {
+                Vector2Int targetExhibitIntendedPos = targetExhibit.GetNextPosition();
+                bool targetExhibitCanMove = true;
+                
+                // 检查目标展品是否被阻挡
+                if (IsExhibitInLightArea(targetExhibit.GridPosition))
+                {
+                    targetExhibitCanMove = false;
+                }
+                else if (targetExhibitIntendedPos == newPlayerPos)
+                {
+                    targetExhibitCanMove = false;
+                }
+                else if (pushedCandleHolder != null && targetExhibitIntendedPos == pushedCandleHolder.GridPosition + playerDirection)
+                {
+                    targetExhibitCanMove = false;
+                }
+                
+                // 无论目标展品是否被阻挡，都允许当前展品移动（将导致碰撞）
+                return true;
+            }
+        }
+        return false;
     }
 }
