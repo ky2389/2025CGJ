@@ -957,8 +957,6 @@ public class GameManager : MonoBehaviour
         }
         return false;
     }
-<<<<<<< Updated upstream
-=======
 
     private void SetupRestartButton()
     {
@@ -1030,5 +1028,4 @@ public class GameManager : MonoBehaviour
         // Clear exhibit start positions
         exhibitStartPositions.Clear();
     }
->>>>>>> Stashed changes
 }
