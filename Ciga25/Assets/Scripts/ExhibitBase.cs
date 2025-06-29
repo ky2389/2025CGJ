@@ -90,16 +90,26 @@ public abstract class ExhibitBase : MonoBehaviour
         CreateSignMarker(startPosition);
     }
     
-    // Create a sign marker at the initial position
-    protected virtual void CreateSignMarker(Vector2Int initialPosition)
+    public virtual void Initialize(Vector2Int startPosition, Vector2Int targetPosition)
+    {
+        gridPosition = startPosition;
+        transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
+        patternStep = 0;
+        
+        // Create the sign marker at target position
+        CreateSignMarker(targetPosition);
+    }
+    
+    // Create a sign marker at the specified position
+    protected virtual void CreateSignMarker(Vector2Int position)
     {
         if (signSprite == null) return;
         
         // Create the sign marker GameObject
-        signMarker = new GameObject($"SignMarker_{initialPosition.x}_{initialPosition.y}");
+        signMarker = new GameObject($"SignMarker_{position.x}_{position.y}");
         
-        // Position it 15 units below the initial position on y-axis
-        Vector3 signPosition = GridManager.Instance.GridToWorldPosition(initialPosition);
+        // Position it 10 units below the specified position on y-axis
+        Vector3 signPosition = GridManager.Instance.GridToWorldPosition(position);
         signPosition.y -= 10f;
         signMarker.transform.position = signPosition;
         
@@ -110,7 +120,7 @@ public abstract class ExhibitBase : MonoBehaviour
         signMarker.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
         signRenderer.sortingOrder = 1;
         
-        Debug.Log($"Created sign marker for exhibit at {initialPosition}");
+        Debug.Log($"Created sign marker at target position {position}");
     }
     
     // Clean up the sign marker when the exhibit is destroyed

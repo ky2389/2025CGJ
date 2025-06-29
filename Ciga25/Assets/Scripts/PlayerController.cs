@@ -52,7 +52,7 @@ public class PlayerController : MonoBehaviour
 
     public void HandleInput()
     {
-        if (GameManager.Instance.IsGameEnded()) return;
+        if (GameManager.Instance == null || GameManager.Instance.IsGameEnded()) return;
 
         Vector2Int direction = Vector2Int.zero;
 
@@ -100,6 +100,8 @@ public class PlayerController : MonoBehaviour
     // Check if an entity at the given position can be pushed in the given direction
     private bool CanPushEntityAtPosition(Vector2Int position, Vector2Int direction)
     {
+        if (GameManager.Instance == null) return false;
+        
         Vector2Int pushTargetPos = position + direction;
         
         // Check if the target position is walkable
