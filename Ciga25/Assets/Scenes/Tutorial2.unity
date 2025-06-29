@@ -223,6 +223,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 9032291492028911116, guid: da624b48580ed19478da330363dedcd0, type: 3}
+      propertyPath: m_fontStyle
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -242,6 +246,39 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 7587082944968171490, guid: da624b48580ed19478da330363dedcd0, type: 3}
   m_PrefabInstance: {fileID: 67426554}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &67426556 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 9032291492028911116, guid: da624b48580ed19478da330363dedcd0, type: 3}
+  m_PrefabInstance: {fileID: 67426554}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &67426557 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1971258747374180381, guid: da624b48580ed19478da330363dedcd0, type: 3}
+  m_PrefabInstance: {fileID: 67426554}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &67426558 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4263605443711139041, guid: da624b48580ed19478da330363dedcd0, type: 3}
+  m_PrefabInstance: {fileID: 67426554}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &115217769
 GameObject:
   m_ObjectHideFlags: 0
@@ -1198,17 +1235,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 513893754}
   m_CullTransparentMesh: 1
---- !u!114 &525939977 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8004713620694260173, guid: da624b48580ed19478da330363dedcd0, type: 3}
-  m_PrefabInstance: {fileID: 67426554}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &569186155
 GameObject:
   m_ObjectHideFlags: 0
@@ -1546,6 +1572,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxTurns: 1000
+  maxRelightUses: 3
   playerStartPosition: {x: 0, y: 0}
   playerPrefab: {fileID: 4422989690621680760, guid: edb5adf2dd86b0e4fab39b9368ec9cee, type: 3}
   obstaclePrefab: {fileID: 8541445955990052288, guid: d4e0a2c190dc4e2439a26bca407a77fe, type: 3}
@@ -1567,8 +1594,10 @@ MonoBehaviour:
     spawnPosition: {x: 2, y: 0}
     targetPosition: {x: 4, y: 4}
   exhibitTargetMarkerPrefab: {fileID: 4595639466723028713, guid: 09fdb6be31c64c7499891b1c90826393, type: 3}
-  relightButton: {fileID: 525939977}
+  relightButton: {fileID: 67426558}
+  restartButton: {fileID: 67426557}
   gameCamera: {fileID: 757944890}
+  relightUsesText: {fileID: 67426556}
 --- !u!4 &672635936
 Transform:
   m_ObjectHideFlags: 0
@@ -1837,7 +1866,7 @@ AudioSource:
   m_audioClip: {fileID: 8300000, guid: be340d414de6f024a967e2850977065e, type: 3}
   m_Resource: {fileID: 8300000, guid: be340d414de6f024a967e2850977065e, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.8
   m_Pitch: 1
   Loop: 0
   Mute: 0
