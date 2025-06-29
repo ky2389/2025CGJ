@@ -126,12 +126,12 @@ public abstract class ExhibitBase : MonoBehaviour
     public abstract Vector2Int GetNextPosition();
     
     // Move to next position in pattern
-    public virtual void MoveToNextPosition()
+    public virtual void MoveToNextPosition(bool forceMove = false)
     {
         Vector2Int nextPos = GetNextPosition();
         
         // Check if movement is blocked by walls, obstacles, or other entities
-        if (CanMoveToPosition(nextPos))
+        if (forceMove || CanMoveToPosition(nextPos))
         {
             gridPosition = nextPos;
             transform.position = GridManager.Instance.GridToWorldPosition(gridPosition);
@@ -212,8 +212,12 @@ public abstract class ExhibitBase : MonoBehaviour
         // Check if the new position would overlap with any entity
         if (GameManager.Instance != null && GameManager.Instance.IsPositionOccupied(newPosition))
         {
-            Debug.LogWarning($"Cannot set exhibit position to {newPosition} - position occupied by another entity");
-            return;
+            // Allow overlapping with other exhibits (collision will be detected by GameManager)
+            if (!GameManager.Instance.IsExhibitAtPosition(newPosition))
+            {
+                Debug.LogWarning($"Cannot set exhibit position to {newPosition} - position occupied by non-exhibit entity");
+                return;
+            }
         }
         
         // Position is valid, update it
