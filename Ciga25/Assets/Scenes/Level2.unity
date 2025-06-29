@@ -2100,13 +2100,13 @@ MonoBehaviour:
   exhibitSpawnList:
   - prefab: {fileID: 6956495222862133517, guid: 06933bcb33aee404a821c6f8aa40127d, type: 3}
     spawnPosition: {x: 7, y: 7}
-    _targetPosition: {x: 0, y: 0}
+    _targetPosition: {x: 5, y: 5}
   - prefab: {fileID: 4595639466723028713, guid: 3ab003ee9f6837f47b059a60fce31b3a, type: 3}
     spawnPosition: {x: 2, y: 5}
-    _targetPosition: {x: 0, y: 0}
+    _targetPosition: {x: 4, y: 8}
   - prefab: {fileID: 4595639466723028713, guid: 0b9ab3a27ba121e439e154e5d26a5008, type: 3}
     spawnPosition: {x: 1, y: 3}
-    _targetPosition: {x: 0, y: 0}
+    _targetPosition: {x: 6, y: 1}
   exhibitTargetMarkerPrefab: {fileID: 4595639466723028713, guid: 09fdb6be31c64c7499891b1c90826393, type: 3}
   relightButton: {fileID: 8004713620697321933}
   gameCamera: {fileID: 524443400}
