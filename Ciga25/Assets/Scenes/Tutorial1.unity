@@ -247,7 +247,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5405567e3d1e0384b8bdf995e0a7f3de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxTurns: 300
+  maxTurns: 1000
   playerStartPosition: {x: 0, y: 0}
   playerPrefab: {fileID: 4422989690621680760, guid: edb5adf2dd86b0e4fab39b9368ec9cee, type: 3}
   obstaclePrefab: {fileID: 8541445955990052288, guid: d4e0a2c190dc4e2439a26bca407a77fe, type: 3}
@@ -1454,29 +1454,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2134048613}
     m_Modifications:
-    - target: {fileID: 905490139119064647, guid: da624b48580ed19478da330363dedcd0, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1864712050667063950, guid: da624b48580ed19478da330363dedcd0, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 750
-      objectReference: {fileID: 0}
     - target: {fileID: 3355057696400177982, guid: da624b48580ed19478da330363dedcd0, type: 3}
       propertyPath: m_Name
       value: Canvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 6294794078647992403, guid: da624b48580ed19478da330363dedcd0, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: -750
-      objectReference: {fileID: 0}
-    - target: {fileID: 6294794078647992403, guid: da624b48580ed19478da330363dedcd0, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: -360
-      objectReference: {fileID: 0}
-    - target: {fileID: 7194899082076300372, guid: da624b48580ed19478da330363dedcd0, type: 3}
-      propertyPath: m_text
-      value: "\u6559\u5B66\u5173\u53611"
       objectReference: {fileID: 0}
     - target: {fileID: 7587082944968171490, guid: da624b48580ed19478da330363dedcd0, type: 3}
       propertyPath: m_Pivot.x
@@ -1556,10 +1536,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7587082944968171490, guid: da624b48580ed19478da330363dedcd0, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8677595452242406497, guid: da624b48580ed19478da330363dedcd0, type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
