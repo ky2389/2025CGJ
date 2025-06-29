@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -65,6 +66,7 @@ public class GameManager : MonoBehaviour
     
     [Header("Game Settings")]
     [SerializeField] private int maxTurns = 20;
+    [SerializeField] private int maxRelightUses = 3; // Maximum number of relight uses allowed
     
     [Header("Player Settings")]
     [SerializeField] private Vector2Int playerStartPosition = new Vector2Int(5, 4); // Center of 9x9 grid
@@ -88,7 +90,9 @@ public class GameManager : MonoBehaviour
     
     [Header("UI Settings")]
     [SerializeField] private UnityEngine.UI.Button relightButton; // Button to activate relight mode
+    [SerializeField] private UnityEngine.UI.Button restartButton; // Button to restart the current level
     [SerializeField] private Camera gameCamera; // Reference to the game camera for mouse input
+    [SerializeField] private TextMeshProUGUI relightUsesText; // Text to display remaining relight uses
     
     // Game state
     private int currentTurn = 0;
@@ -96,6 +100,9 @@ public class GameManager : MonoBehaviour
     private bool isProcessingTurn = false;
     private bool isRelightModeActive = false; // Whether relight mode is active
     private bool isArrowKeyPressed = false; // Whether R key is pressed for showing arrows
+    
+    // Relight system
+    private int relightUsesRemaining; // Number of relight uses remaining
     
     // Grid and entities
     private GridManager gridManager;
@@ -108,6 +115,12 @@ public class GameManager : MonoBehaviour
     public PlayerController Player
     {
         get { return player; }
+    }
+    
+    // Public property for accessing relight uses
+    public int RelightUsesRemaining
+    {
+        get { return relightUsesRemaining; }
     }
     
     private void Awake()
@@ -128,6 +141,7 @@ public class GameManager : MonoBehaviour
     {
         InitializeGame();
         SetupRelightButton();
+        SetupRestartButton();
     }
     
     private void Update()
@@ -148,6 +162,9 @@ public class GameManager : MonoBehaviour
     {
         // Get grid manager
         gridManager = GridManager.Instance;
+        
+        // Initialize relight uses
+        relightUsesRemaining = maxRelightUses;
         
         // Create entities
         CreatePlayer();
@@ -736,15 +753,39 @@ public class GameManager : MonoBehaviour
         {
             relightButton.onClick.AddListener(ToggleRelightMode);
         }
+        
+        // Initialize the relight uses UI
+        UpdateRelightUsesUI();
+    }
+    
+    private void UpdateRelightUsesUI()
+    {
+        if (relightUsesText != null)
+        {
+            relightUsesText.text = $"{relightUsesRemaining}/{maxRelightUses}";
+        }
+        
+        // Update button interactability based on remaining uses
+        if (relightButton != null)
+        {
+            relightButton.interactable = relightUsesRemaining > 0;
+        }
     }
     
     private void ToggleRelightMode()
     {
+        // Check if we have any relight uses remaining
+        if (relightUsesRemaining <= 0)
+        {
+            Debug.Log("No relight uses remaining!");
+            return;
+        }
+        
         isRelightModeActive = !isRelightModeActive;
         
         if (isRelightModeActive)
         {
-            Debug.Log("Relight mode activated. Click on a candle holder to relight it.");
+            Debug.Log($"Relight mode activated. Click on a candle holder to relight it. Uses remaining: {relightUsesRemaining}");
             // You can add visual feedback here (change button color, show cursor, etc.)
         }
         else
@@ -770,12 +811,26 @@ public class GameManager : MonoBehaviour
                 CandleHolder clickedCandleHolder = hit.collider.GetComponent<CandleHolder>();
                 if (clickedCandleHolder != null)
                 {
-                    // Relight the candle holder
-                    clickedCandleHolder.RelightFlame();
-                    
-                    // Deactivate relight mode
-                    isRelightModeActive = false;
-                    Debug.Log("Candle holder relit! Relight mode deactivated.");
+                    // Check if the candle holder is actually unlit (needs relighting)
+                    if (!clickedCandleHolder.IsLit)
+                    {
+                        // Relight the candle holder
+                        clickedCandleHolder.RelightFlame();
+                        
+                        // Decrease relight uses only on successful relight
+                        relightUsesRemaining--;
+                        UpdateRelightUsesUI();
+                        
+                        // Deactivate relight mode
+                        isRelightModeActive = false;
+                        Debug.Log($"Candle holder relit! Relight mode deactivated. Uses remaining: {relightUsesRemaining}");
+                    }
+                    else
+                    {
+                        // Candle holder is already lit, don't count as a use
+                        isRelightModeActive = false;
+                        Debug.Log("Candle holder is already lit. Relight mode deactivated.");
+                    }
                 }
                 else
                 {
@@ -789,7 +844,6 @@ public class GameManager : MonoBehaviour
                 Debug.Log("Relight mode cancelled.");
             }
         }
-        
     }
 
     // Handle arrow visibility input (R key)
@@ -903,4 +957,78 @@ public class GameManager : MonoBehaviour
         }
         return false;
     }
+<<<<<<< Updated upstream
+=======
+
+    private void SetupRestartButton()
+    {
+        if (restartButton != null)
+        {
+            restartButton.onClick.AddListener(RestartLevel);
+        }
+    }
+
+    public void RestartLevel()
+    {
+        Debug.Log("Restarting current level...");
+        
+        // Stop any ongoing coroutines
+        StopAllCoroutines();
+        
+        // Reset game state
+        currentTurn = 0;
+        gameEnded = false;
+        isProcessingTurn = false;
+        isRelightModeActive = false;
+        isArrowKeyPressed = false;
+        
+        // Reset relight uses
+        relightUsesRemaining = maxRelightUses;
+        
+        // Clear all existing entities
+        ClearAllEntities();
+        
+        // Reinitialize the game
+        InitializeGame();
+        
+        // Update UI
+        UpdateRelightUsesUI();
+        
+        Debug.Log("Level restarted! Turn: " + currentTurn + "/" + maxTurns);
+    }
+
+    private void ClearAllEntities()
+    {
+        // Clear player
+        if (player != null)
+        {
+            Destroy(player.gameObject);
+            player = null;
+        }
+        
+        // Clear exhibits
+        foreach (ExhibitBase exhibit in exhibits)
+        {
+            if (exhibit != null)
+            {
+                Destroy(exhibit.gameObject);
+            }
+        }
+        exhibits.Clear();
+        exhibitTargetPairs.Clear();
+        
+        // Clear candle holders
+        foreach (CandleHolder candleHolder in candleHolders)
+        {
+            if (candleHolder != null)
+            {
+                Destroy(candleHolder.gameObject);
+            }
+        }
+        candleHolders.Clear();
+        
+        // Clear exhibit start positions
+        exhibitStartPositions.Clear();
+    }
+>>>>>>> Stashed changes
 }

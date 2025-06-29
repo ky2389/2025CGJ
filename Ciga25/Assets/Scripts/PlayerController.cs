@@ -108,9 +108,16 @@ public class PlayerController : MonoBehaviour
             return false;
         }
         
-        // Check if the target position is occupied by another entity
+        // Check what type of entity is at the target position
         if (GameManager.Instance.IsPositionOccupied(pushTargetPos))
         {
+            // Allow pushing an exhibit into another exhibit (will cause collision and game over)
+            if (GameManager.Instance.IsExhibitAtPosition(position) && GameManager.Instance.IsExhibitAtPosition(pushTargetPos))
+            {
+                return true;
+            }
+            
+            // Prevent pushing into candle holders, player, or other non-exhibit entities
             return false;
         }
         
