@@ -66,7 +66,6 @@ public class GameManager : MonoBehaviour
     
     [Header("Game Settings")]
     [SerializeField] private int maxTurns = 20;
-    [SerializeField] private int maxRelightUses = 3; // Maximum number of relight uses allowed
     
     [Header("Player Settings")]
     [SerializeField] private Vector2Int playerStartPosition = new Vector2Int(5, 4); // Center of 9x9 grid
@@ -90,9 +89,8 @@ public class GameManager : MonoBehaviour
     
     [Header("UI Settings")]
     [SerializeField] private UnityEngine.UI.Button relightButton; // Button to activate relight mode
-    [SerializeField] private UnityEngine.UI.Button restartButton; // Button to restart the current level
     [SerializeField] private Camera gameCamera; // Reference to the game camera for mouse input
-    [SerializeField] private TextMeshProUGUI relightUsesText; // Text to display remaining relight uses
+    [SerializeField] private TMPro.TextMeshProUGUI turnText; // Text to display current turn and max turns
     
     // Game state
     private int currentTurn = 0;
@@ -100,9 +98,6 @@ public class GameManager : MonoBehaviour
     private bool isProcessingTurn = false;
     private bool isRelightModeActive = false; // Whether relight mode is active
     private bool isArrowKeyPressed = false; // Whether R key is pressed for showing arrows
-    
-    // Relight system
-    private int relightUsesRemaining; // Number of relight uses remaining
     
     // Grid and entities
     private GridManager gridManager;
@@ -115,12 +110,6 @@ public class GameManager : MonoBehaviour
     public PlayerController Player
     {
         get { return player; }
-    }
-    
-    // Public property for accessing relight uses
-    public int RelightUsesRemaining
-    {
-        get { return relightUsesRemaining; }
     }
     
     private void Awake()
@@ -141,7 +130,6 @@ public class GameManager : MonoBehaviour
     {
         InitializeGame();
         SetupRelightButton();
-        SetupRestartButton();
     }
     
     private void Update()
@@ -163,9 +151,6 @@ public class GameManager : MonoBehaviour
         // Get grid manager
         gridManager = GridManager.Instance;
         
-        // Initialize relight uses
-        relightUsesRemaining = maxRelightUses;
-        
         // Create entities
         CreatePlayer();
         CreateExhibits();
@@ -178,6 +163,9 @@ public class GameManager : MonoBehaviour
         
         // Initialize arrows as hidden
         UpdateExhibitMovementArrows();
+        
+        // Update UI
+        UpdateTurnDisplay();
         
         Debug.Log("Game initialized! Use WASD to move. Turn: " + currentTurn + "/" + maxTurns);
     }
@@ -469,19 +457,41 @@ public class GameManager : MonoBehaviour
 
             if (exhibits[i] == pushedExhibit)
             {
-                // 被推动的展品直接跟随玩家方向移动
                 intendedPos = exhibits[i].GridPosition + playerDirection;
             }
             else
             {
-                // 普通展品按照自己的移动模式计算目标位置
                 intendedPos = exhibits[i].GetNextPosition();
 
-                // 检查各种阻挡情况
-                if (IsExhibitBlocked(exhibits[i], intendedPos, newPlayerPos, pushedExhibit, pushedCandleHolder))
+                // 检查展品是否被烛光冻结
+                if (IsExhibitInLightArea(exhibits[i].GridPosition))
                 {
                     intendedPos = exhibits[i].GridPosition;
                     canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} frozen by light");
+                    // Hide arrow for frozen exhibit
+                    exhibits[i].HideMovementArrow();
+                }
+                // 如果想移动的位置被玩家占据
+                else if (intendedPos == newPlayerPos)
+                {
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by player moving to {newPlayerPos}");
+                }
+                // 被推动展品阻挡
+                else if (pushedExhibit != null && intendedPos == pushedExhibit.GridPosition + playerDirection)
+                {
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed exhibit moving to {pushedExhibit.GridPosition + playerDirection}");
+                }
+                // 被推动烛台阻挡
+                else if (pushedCandleHolder != null && intendedPos == pushedCandleHolder.GridPosition + playerDirection)
+                {
+                    intendedPos = exhibits[i].GridPosition;
+                    canMove = false;
+                    Debug.Log($"Exhibit at {exhibits[i].GridPosition} blocked by pushed candle holder moving to {pushedCandleHolder.GridPosition + playerDirection}");
                 }
             }
 
@@ -508,9 +518,7 @@ public class GameManager : MonoBehaviour
             }
             else if (exhibitCanMove[i])
             {
-                // 检查是否需要强制移动（当目标位置有被阻挡的展品时）
-                bool forceMove = ShouldForceMove(exhibitNewPositions[i], newPlayerPos, playerDirection, pushedExhibit, pushedCandleHolder);
-                exhibits[i].MoveToNextPosition(forceMove);
+                exhibits[i].MoveToNextPosition();
             }
             else
             {
@@ -558,6 +566,9 @@ public class GameManager : MonoBehaviour
             }
         }
         Debug.Log("Turn: " + currentTurn + "/" + maxTurns);
+
+        // Update turn display UI
+        UpdateTurnDisplay();
 
         isProcessingTurn = false;
     }
@@ -753,39 +764,15 @@ public class GameManager : MonoBehaviour
         {
             relightButton.onClick.AddListener(ToggleRelightMode);
         }
-        
-        // Initialize the relight uses UI
-        UpdateRelightUsesUI();
-    }
-    
-    private void UpdateRelightUsesUI()
-    {
-        if (relightUsesText != null)
-        {
-            relightUsesText.text = $"{relightUsesRemaining}/{maxRelightUses}";
-        }
-        
-        // Update button interactability based on remaining uses
-        if (relightButton != null)
-        {
-            relightButton.interactable = relightUsesRemaining > 0;
-        }
     }
     
     private void ToggleRelightMode()
     {
-        // Check if we have any relight uses remaining
-        if (relightUsesRemaining <= 0)
-        {
-            Debug.Log("No relight uses remaining!");
-            return;
-        }
-        
         isRelightModeActive = !isRelightModeActive;
         
         if (isRelightModeActive)
         {
-            Debug.Log($"Relight mode activated. Click on a candle holder to relight it. Uses remaining: {relightUsesRemaining}");
+            Debug.Log("Relight mode activated. Click on a candle holder to relight it.");
             // You can add visual feedback here (change button color, show cursor, etc.)
         }
         else
@@ -811,26 +798,12 @@ public class GameManager : MonoBehaviour
                 CandleHolder clickedCandleHolder = hit.collider.GetComponent<CandleHolder>();
                 if (clickedCandleHolder != null)
                 {
-                    // Check if the candle holder is actually unlit (needs relighting)
-                    if (!clickedCandleHolder.IsLit)
-                    {
-                        // Relight the candle holder
-                        clickedCandleHolder.RelightFlame();
-                        
-                        // Decrease relight uses only on successful relight
-                        relightUsesRemaining--;
-                        UpdateRelightUsesUI();
-                        
-                        // Deactivate relight mode
-                        isRelightModeActive = false;
-                        Debug.Log($"Candle holder relit! Relight mode deactivated. Uses remaining: {relightUsesRemaining}");
-                    }
-                    else
-                    {
-                        // Candle holder is already lit, don't count as a use
-                        isRelightModeActive = false;
-                        Debug.Log("Candle holder is already lit. Relight mode deactivated.");
-                    }
+                    // Relight the candle holder
+                    clickedCandleHolder.RelightFlame();
+                    
+                    // Deactivate relight mode
+                    isRelightModeActive = false;
+                    Debug.Log("Candle holder relit! Relight mode deactivated.");
                 }
                 else
                 {
@@ -844,6 +817,7 @@ public class GameManager : MonoBehaviour
                 Debug.Log("Relight mode cancelled.");
             }
         }
+        
     }
 
     // Handle arrow visibility input (R key)
@@ -859,173 +833,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private bool IsExhibitBlocked(ExhibitBase exhibit, Vector2Int intendedPos, Vector2Int newPlayerPos, ExhibitBase pushedExhibit, CandleHolder pushedCandleHolder)
+    private void UpdateTurnDisplay()
     {
-        Vector2Int playerDirection = newPlayerPos - exhibit.GridPosition;
-        
-        // 1. 检查展品是否被烛光冻结
-        if (IsExhibitInLightArea(exhibit.GridPosition))
+        if (turnText != null)
         {
-            Debug.Log($"Exhibit at {exhibit.GridPosition} frozen by light");
-            exhibit.HideMovementArrow();
-            return true;
+            turnText.text = $"回合: {currentTurn}/{maxTurns}";
         }
-        
-        // 2. 检查目标位置是否被玩家占据
-        if (intendedPos == newPlayerPos)
-        {
-            Debug.Log($"Exhibit at {exhibit.GridPosition} blocked by player moving to {newPlayerPos}");
-            return true;
-        }
-        
-        // 3. 检查目标位置是否被推动的烛台占据
-        if (pushedCandleHolder != null && intendedPos == pushedCandleHolder.GridPosition + playerDirection)
-        {
-            Debug.Log($"Exhibit at {exhibit.GridPosition} blocked by pushed candle holder moving to {pushedCandleHolder.GridPosition + playerDirection}");
-            return true;
-        }
-        
-        // 4. 检查目标位置是否被其他展品占据
-        if (IsExhibitAtPosition(intendedPos))
-        {
-            ExhibitBase targetExhibit = GetExhibitAtPosition(intendedPos);
-            if (targetExhibit != null)
-            {
-                Vector2Int targetExhibitIntendedPos = targetExhibit.GetNextPosition();
-                bool targetExhibitCanMove = true;
-                
-                // 检查目标展品是否被阻挡
-                if (IsExhibitInLightArea(targetExhibit.GridPosition))
-                {
-                    targetExhibitCanMove = false;
-                }
-                else if (targetExhibitIntendedPos == newPlayerPos)
-                {
-                    targetExhibitCanMove = false;
-                }
-                else if (pushedCandleHolder != null && targetExhibitIntendedPos == pushedCandleHolder.GridPosition + playerDirection)
-                {
-                    targetExhibitCanMove = false;
-                }
-                
-                // 如果目标展品被阻挡，允许当前展品移动到其位置（将导致碰撞）
-                if (!targetExhibitCanMove)
-                {
-                    Debug.Log($"Exhibit at {exhibit.GridPosition} will collide with blocked exhibit at {intendedPos}");
-                    return false; // 允许移动，将导致碰撞
-                }
-                else
-                {
-                    // 目标展品可以移动，也允许当前展品移动（将导致碰撞）
-                    Debug.Log($"Exhibit at {exhibit.GridPosition} will collide with moving exhibit at {intendedPos}");
-                    return false; // 允许移动，将导致碰撞
-                }
-            }
-        }
-        
-        return false; // 没有被阻挡
-    }
-
-    private bool ShouldForceMove(Vector2Int intendedPos, Vector2Int newPlayerPos, Vector2Int playerDirection, ExhibitBase pushedExhibit, CandleHolder pushedCandleHolder)
-    {
-        // 检查目标位置是否被其他展品占据
-        if (IsExhibitAtPosition(intendedPos))
-        {
-            ExhibitBase targetExhibit = GetExhibitAtPosition(intendedPos);
-            if (targetExhibit != null)
-            {
-                Vector2Int targetExhibitIntendedPos = targetExhibit.GetNextPosition();
-                bool targetExhibitCanMove = true;
-                
-                // 检查目标展品是否被阻挡
-                if (IsExhibitInLightArea(targetExhibit.GridPosition))
-                {
-                    targetExhibitCanMove = false;
-                }
-                else if (targetExhibitIntendedPos == newPlayerPos)
-                {
-                    targetExhibitCanMove = false;
-                }
-                else if (pushedCandleHolder != null && targetExhibitIntendedPos == pushedCandleHolder.GridPosition + playerDirection)
-                {
-                    targetExhibitCanMove = false;
-                }
-                
-                // 无论目标展品是否被阻挡，都允许当前展品移动（将导致碰撞）
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void SetupRestartButton()
-    {
-        if (restartButton != null)
-        {
-            restartButton.onClick.AddListener(RestartLevel);
-        }
-    }
-
-    public void RestartLevel()
-    {
-        Debug.Log("Restarting current level...");
-        
-        // Stop any ongoing coroutines
-        StopAllCoroutines();
-        
-        // Reset game state
-        currentTurn = 0;
-        gameEnded = false;
-        isProcessingTurn = false;
-        isRelightModeActive = false;
-        isArrowKeyPressed = false;
-        
-        // Reset relight uses
-        relightUsesRemaining = maxRelightUses;
-        
-        // Clear all existing entities
-        ClearAllEntities();
-        
-        // Reinitialize the game
-        InitializeGame();
-        
-        // Update UI
-        UpdateRelightUsesUI();
-        
-        Debug.Log("Level restarted! Turn: " + currentTurn + "/" + maxTurns);
-    }
-
-    private void ClearAllEntities()
-    {
-        // Clear player
-        if (player != null)
-        {
-            Destroy(player.gameObject);
-            player = null;
-        }
-        
-        // Clear exhibits
-        foreach (ExhibitBase exhibit in exhibits)
-        {
-            if (exhibit != null)
-            {
-                Destroy(exhibit.gameObject);
-            }
-        }
-        exhibits.Clear();
-        exhibitTargetPairs.Clear();
-        
-        // Clear candle holders
-        foreach (CandleHolder candleHolder in candleHolders)
-        {
-            if (candleHolder != null)
-            {
-                Destroy(candleHolder.gameObject);
-            }
-        }
-        candleHolders.Clear();
-        
-        // Clear exhibit start positions
-        exhibitStartPositions.Clear();
     }
 }

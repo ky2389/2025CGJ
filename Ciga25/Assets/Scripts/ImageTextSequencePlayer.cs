@@ -79,7 +79,7 @@ public class ImageTextSequencePlayer : MonoBehaviour
             }
             else
             {
-                EndSequence();
+                SceneManager.Instance.LoadScene("Tutorial1");
             }
         }
     }
@@ -129,11 +129,8 @@ public class ImageTextSequencePlayer : MonoBehaviour
     }
 
 
-    void EndSequence()
-    {
-        dialogueText.text = "";
-        nameText.text = "";
-        backgroundImage.enabled = false;
-        Debug.Log("Dialogue sequence complete.");
-    }
+    // void EndSequence()
+    // {
+        
+    // }
 }
