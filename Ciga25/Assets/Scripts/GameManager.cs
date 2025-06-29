@@ -12,25 +12,25 @@ public class GameManager : MonoBehaviour
     {
         public GameObject prefab;
         public Vector2Int spawnPosition;
-        [SerializeField] private Vector2Int _targetPosition;
+        public Vector2Int targetPosition;
         
         // Property that defaults target position to spawn position
-        public Vector2Int targetPosition
-        {
-            get
-            {
+       // public Vector2Int targetPosition
+        //{
+            //get
+            //{
                 // If target position is zero (unset), return spawn position
-                if (_targetPosition == Vector2Int.zero)
-                {
-                    return spawnPosition;
-                }
-                return _targetPosition;
-            }
-            set
-            {
-                _targetPosition = value;
-            }
-        }
+                //if (_targetPosition == Vector2Int.zero)
+                //{
+                    // spawnPosition;
+                //}
+                //return _targetPosition;
+            //}
+            //set
+            //{
+                //_targetPosition = value;
+            //}
+//        }
     }
 
     [System.Serializable]
