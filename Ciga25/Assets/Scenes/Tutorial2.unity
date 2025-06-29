@@ -1099,10 +1099,10 @@ MonoBehaviour:
     lightRadius: 1
   exhibitSpawnList:
   - prefab: {fileID: 6956495222862133517, guid: 06933bcb33aee404a821c6f8aa40127d, type: 3}
-    spawnPosition: {x: 1, y: 3}
+    spawnPosition: {x: 0, y: 3}
     _targetPosition: {x: 0, y: 0}
   - prefab: {fileID: 4595639466723028713, guid: 3ab003ee9f6837f47b059a60fce31b3a, type: 3}
-    spawnPosition: {x: 1, y: 1}
+    spawnPosition: {x: 2, y: 1}
     _targetPosition: {x: 0, y: 0}
   exhibitTargetMarkerPrefab: {fileID: 4595639466723028713, guid: 09fdb6be31c64c7499891b1c90826393, type: 3}
   relightButton: {fileID: 525939977}
@@ -1132,7 +1132,6 @@ GameObject:
   m_Component:
   - component: {fileID: 757944893}
   - component: {fileID: 757944890}
-  - component: {fileID: 757944892}
   - component: {fileID: 757944891}
   m_Layer: 0
   m_Name: Main Camera
@@ -1236,14 +1235,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
---- !u!81 &757944892
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 757944889}
-  m_Enabled: 1
 --- !u!4 &757944893
 Transform:
   m_ObjectHideFlags: 0
