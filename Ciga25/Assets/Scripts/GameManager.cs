@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class GameManager : MonoBehaviour
@@ -66,6 +67,9 @@ public class GameManager : MonoBehaviour
     
     [Header("Game Settings")]
     [SerializeField] private int maxTurns = 20;
+
+    [SerializeField] private SceneManager scene;
+    [SerializeField] private string sceneName;
     
     [Header("Player Settings")]
     [SerializeField] private Vector2Int playerStartPosition = new Vector2Int(5, 4); // Center of 9x9 grid
@@ -105,7 +109,8 @@ public class GameManager : MonoBehaviour
     private List<ExhibitBase> exhibits = new List<ExhibitBase>();
     private List<CandleHolder> candleHolders = new List<CandleHolder>();
     private Dictionary<Vector2Int, Vector2Int> exhibitStartPositions = new Dictionary<Vector2Int, Vector2Int>();
-    
+
+    public GameObject badEnding;
     // Public property for accessing player
     public PlayerController Player
     {
@@ -688,17 +693,18 @@ public class GameManager : MonoBehaviour
     
     private void EndGame(bool won, string message)
     {
+        
         gameEnded = true;
         Debug.Log(won ? "Victory! " + message : "Game Over! " + message);
-        
         // You can add UI feedback here
         if (won)
         {
-            Debug.Log("Congratulations! You restored the museum!");
+            scene.LoadScene(sceneName);
         }
         else
         {
             Debug.Log("The museum remains in chaos...");
+            badEnding.SetActive(true);
         }
     }
     
