@@ -135,6 +135,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Canvas
       objectReference: {fileID: 0}
+    - target: {fileID: 4293614308161387646, guid: da624b48580ed19478da330363dedcd0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6098188307885113377, guid: da624b48580ed19478da330363dedcd0, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7194899082076300372, guid: da624b48580ed19478da330363dedcd0, type: 3}
       propertyPath: m_text
       value: "\u6559\u5B66\u5173\u53613"
@@ -249,7 +257,29 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
 --- !u!114 &5457922 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8004713620694260173, guid: da624b48580ed19478da330363dedcd0, type: 3}
+  m_CorrespondingSourceObject: {fileID: 9032291492028911116, guid: da624b48580ed19478da330363dedcd0, type: 3}
+  m_PrefabInstance: {fileID: 5457920}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &5457923 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1971258747374180381, guid: da624b48580ed19478da330363dedcd0, type: 3}
+  m_PrefabInstance: {fileID: 5457920}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &5457924 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4263605443711139041, guid: da624b48580ed19478da330363dedcd0, type: 3}
   m_PrefabInstance: {fileID: 5457920}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
@@ -1990,6 +2020,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxTurns: 300
+  maxRelightUses: 3
   playerStartPosition: {x: 0, y: 0}
   playerPrefab: {fileID: 4422989690621680760, guid: edb5adf2dd86b0e4fab39b9368ec9cee, type: 3}
   obstaclePrefab: {fileID: 8541445955990052288, guid: d4e0a2c190dc4e2439a26bca407a77fe, type: 3}
@@ -2015,8 +2046,10 @@ MonoBehaviour:
     spawnPosition: {x: 5, y: 3}
     targetPosition: {x: 5, y: 5}
   exhibitTargetMarkerPrefab: {fileID: 4595639466723028713, guid: 09fdb6be31c64c7499891b1c90826393, type: 3}
-  relightButton: {fileID: 5457922}
+  relightButton: {fileID: 5457924}
+  restartButton: {fileID: 5457923}
   gameCamera: {fileID: 524443400}
+  relightUsesText: {fileID: 5457922}
 --- !u!4 &2130237941
 Transform:
   m_ObjectHideFlags: 0

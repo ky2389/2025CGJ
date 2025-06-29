@@ -2958,7 +2958,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5405567e3d1e0384b8bdf995e0a7f3de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxTurns: 200
+  maxTurns: 150
+  maxRelightUses: 3
   playerStartPosition: {x: 0, y: 0}
   playerPrefab: {fileID: 4422989690621680760, guid: edb5adf2dd86b0e4fab39b9368ec9cee, type: 3}
   obstaclePrefab: {fileID: 8541445955990052288, guid: d4e0a2c190dc4e2439a26bca407a77fe, type: 3}
@@ -3027,8 +3028,10 @@ MonoBehaviour:
     spawnPosition: {x: 7, y: 2}
     targetPosition: {x: 6, y: 1}
   exhibitTargetMarkerPrefab: {fileID: 4595639466723028713, guid: 09fdb6be31c64c7499891b1c90826393, type: 3}
-  relightButton: {fileID: 8004713620697321933}
+  relightButton: {fileID: 6091128391158868646}
+  restartButton: {fileID: 6091128391158868645}
   gameCamera: {fileID: 524443400}
+  relightUsesText: {fileID: 6091128391158868644}
 --- !u!4 &2130237941
 Transform:
   m_ObjectHideFlags: 0
@@ -3138,7 +3141,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6965583609800963626, guid: 0b4975d8792cce842af1fa6968742636, type: 3}
       propertyPath: m_text
-      value: "\u56DE\u54080/200"
+      value: "\u56DE\u54080/150"
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -3160,14 +3163,20 @@ PrefabInstance:
       addedObject: {fileID: 300833898}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 0b4975d8792cce842af1fa6968742636, type: 3}
---- !u!224 &7587082944965236706 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 565246272494771479, guid: 0b4975d8792cce842af1fa6968742636, type: 3}
+--- !u!114 &6091128391158868644 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1942220708206038794, guid: 0b4975d8792cce842af1fa6968742636, type: 3}
   m_PrefabInstance: {fileID: 6091128391158868643}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &8004713620697321933 stripped
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &6091128391158868645 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8533861400613537929, guid: 0b4975d8792cce842af1fa6968742636, type: 3}
+  m_CorrespondingSourceObject: {fileID: 1140892738405691743, guid: 0b4975d8792cce842af1fa6968742636, type: 3}
   m_PrefabInstance: {fileID: 6091128391158868643}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
@@ -3176,6 +3185,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &6091128391158868646 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7337092048335441702, guid: 0b4975d8792cce842af1fa6968742636, type: 3}
+  m_PrefabInstance: {fileID: 6091128391158868643}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!224 &7587082944965236706 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 565246272494771479, guid: 0b4975d8792cce842af1fa6968742636, type: 3}
+  m_PrefabInstance: {fileID: 6091128391158868643}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
